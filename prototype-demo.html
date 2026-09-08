@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeckSure 交互原型 · 一次从想法到放心交付的演示</title>
+<style>
+  :root{
+    --brand:#2f4ed7; --brand-2:#2741bf; --brand-soft:#eef1ff; --brand-faint:#f5f7ff;
+    --ink:#141b2c; --muted:#5d6b84; --faint:#8a96ad;
+    --line:#e5e9f3; --bg:#f6f7fb; --card:#fff; --chart-surface:#fbfcff;
+    --grid:#e9ecf4; --baseline:#ccd3e3;
+    --ok:#15803d; --ok-bg:#e8f6ee; --ok-line:#bfe4cf;
+    --warn:#a25d06; --warn-bg:#fdf3e3; --warn-line:#f0dcb6;
+    --bad:#c22f2f; --bad-bg:#fdeeee; --bad-line:#f2c8c8;
+    --ser-blue:#2f4ed7; --ser-light:#8fa3ef; --ser-deem:#d3d9e8;
+    --shadow:0 1px 2px rgba(20,27,44,.04), 0 8px 22px rgba(20,27,44,.06);
+    --shadow-lg:0 4px 10px rgba(20,27,44,.06), 0 24px 54px rgba(20,27,44,.13);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    color:var(--ink); background:var(--bg); line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; min-height:100vh;
+  }
+  /* ---------- simulated-mode strip ---------- */
+  .simstrip{
+    background:#1c2434; color:#cdd6e6; font-size:12px; text-align:center;
+    padding:7px 16px; letter-spacing:.2px;
+  }
+  .simstrip b{color:#fff;}
+  .simstrip .pill{display:inline-block;background:rgba(255,255,255,.14);color:#fff;
+    font-weight:600;border-radius:999px;padding:0 9px;margin:0 4px;font-size:11px;}
+  /* ---------- app layout ---------- */
+  #app{flex:1;display:flex;flex-direction:column;width:100%;max-width:1120px;margin:0 auto;padding:0 22px;}
+  .topbar{display:flex;align-items:center;gap:18px;padding:14px 0 12px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;white-space:nowrap;}
+  .brand .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2f4ed7,#6a7ff0);
+    color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;}
+  .brand span{color:var(--brand);}
+  .ctx{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .ctx .chip{font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);
+    border-radius:999px;padding:4px 11px;white-space:nowrap;}
+  .ctx .chip b{color:var(--ink);font-weight:600;}
+  .avatar{width:28px;height:28px;border-radius:50%;background:#1c2434;color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+  /* ---------- stepper ---------- */
+  .stepper{display:flex;align-items:center;gap:2px;margin:4px 0 2px;user-select:none;flex-wrap:wrap;}
+  .stp{display:flex;align-items:center;gap:0;}
+  .stp .dot{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;background:#eef1f7;color:#98a3b8;border:1px solid var(--line);flex:none;position:relative;}
+  .stp .lab{font-size:11.5px;color:#98a3b8;margin-left:6px;white-space:nowrap;font-weight:600;}
+  .stp.done .dot{background:var(--brand);border-color:var(--brand);color:#fff;}
+  .stp.cur .dot{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);box-shadow:0 0 0 3px rgba(47,78,215,.12);}
+  .stp.cur .lab{color:var(--brand);}
+  .stp.done .lab{color:var(--muted);}
+  .stp .bar{width:20px;height:2px;background:#e5e9f3;margin:0 6px;flex:none;border-radius:2px;}
+  .stp.done .bar,.stp.cur .bar{background:#c6d1f5;}
+  /* ---------- screens ---------- */
+  main{flex:1;}
+  .screen{display:none;animation:fade .28s ease;}
+  .screen.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .inner{max-width:980px;margin:0 auto;padding:22px 0 30px;}
+  .head{margin-bottom:16px;}
+  .eyebrow{display:inline-block;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--brand);
+    text-transform:uppercase;margin-bottom:6px;}
+  h1{font-size:27px;font-weight:800;line-height:1.3;}
+  h1 .lighter{color:var(--muted);font-weight:600;}
+  .sub{color:var(--muted);font-size:14.5px;max-width:760px;margin-top:6px;}
+  .divbar{display:flex;gap:8px;align-items:center;margin:14px 0 12px;font-size:12px;color:var(--faint);}
+  .divbar i{font-style:normal;}
+  .divbar .ai{color:#7a5ac2;}
+  .divbar .human{color:var(--brand);}
+  .divbar .sep{flex:1;height:1px;background:var(--line);}
+  .tagAI{font-size:10.5px;color:#7a5ac2;background:#f4f0fd;border:1px solid #e4d9f7;
+    border-radius:6px;padding:1px 7px;font-weight:700;letter-spacing:.3px;}
+  .tagProto{font-size:10.5px;color:var(--muted);background:#fff;border:1px dashed #cdd4e2;
+    border-radius:6px;padding:1px 7px;font-weight:600;}
+  .grid{display:grid;gap:14px;}
+  .cols2{grid-template-columns:1.4fr 1fr;}
+  .cols2r{grid-template-columns:1fr 1fr;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);}
+  .card h3{font-size:15px;font-weight:700;margin-bottom:10px;}
+  .lbl{font-size:12.5px;font-weight:700;color:var(--muted);margin:0 0 6px;letter-spacing:.2px;}
+  textarea, input[type=text]{
+    font-family:inherit;font-size:14px;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;
+  }
+  textarea:focus,input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,78,215,.12);}
+  .muted{color:var(--muted);} .faint{color:var(--faint);} .small{font-size:12.5px;} .tiny{font-size:11.5px;}
+  .btn{font-family:inherit;font-size:14px;font-weight:700;border:0;cursor:pointer;
+    background:var(--brand);color:#fff;padding:10px 18px;border-radius:10px;
+    transition:.15s;display:inline-flex;align-items:center;gap:7px;}
+  .btn:hover{background:var(--brand-2);}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+  .btn.ghost:hover{border-color:#b9c3dd;background:#fafbff;}
+  .btn.danger-ghost{background:#fff;color:var(--bad);border:1px solid var(--bad-line);}
+  .btn.danger-ghost:hover{background:var(--bad-bg);}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center;}
+  .chipstate{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
+    border-radius:999px;padding:2px 10px;line-height:1.6;}
+  .chipstate.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line);}
+  .chipstate.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line);}
+  .chipstate.bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line);}
+  .chipstate.info{background:var(--brand-soft);color:var(--brand);border:1px solid #d4ddfa;}
+  .note{background:var(--brand-faint);border:1px solid #e2e8fb;border-radius:10px;padding:10px 13px;
+    font-size:13px;color:#3c4a75;display:flex;gap:9px;align-items:flex-start;}
+  .note.warnbg{background:var(--warn-bg);border-color:var(--warn-line);color:#7c4a08;}
+  .note.okbg{background:var(--ok-bg);border-color:var(--ok-line);color:#1c6a3e;}
+  /* bottom nav */
+  .nav{position:sticky;bottom:0;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);
+    border-top:1px solid var(--line);margin:0 -22px -0 -22px;padding:11px 24px;
+    display:flex;align-items:center;gap:12px;}
+  .nav .hint{flex:1;text-align:center;font-size:12.5px;color:var(--faint);}
+  .nav .hint b{color:var(--brand);}
+  /* generic chips for materials */
+  .filechip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);
+    border-radius:9px;padding:6px 11px;font-size:12px;color:var(--muted);}
+  .filechip .ic{width:15px;height:15px;border-radius:4px;background:var(--brand-soft);color:var(--brand);
+    display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex:none;}
+  .filechip .y{color:var(--ok);font-weight:800;}
+  .option{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;background:#fff;cursor:pointer;transition:.15s;text-align:left;width:100%;}
+  .option:hover{border-color:#b9c3e6;}
+  .option .radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--baseline);flex:none;}
+  .option.sel{border-color:var(--brand);background:var(--brand-faint);box-shadow:0 0 0 1px var(--brand) inset;}
+  .option.sel .radio{border-color:var(--brand);background:radial-gradient(circle,#fff 0 3px,var(--brand) 4px);}
+  /* stat tiles */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;}
+  .stat .k{font-size:12px;color:var(--muted);}
+  .stat .v{font-size:24px;font-weight:800;letter-spacing:-.3px;margin:2px 0;}
+  .stat .v .unit{font-size:14px;color:var(--muted);font-weight:600;}
+  .stat .d{font-size:11.5px;color:var(--faint);margin-top:2px;}
+  /* charts wrapper */
+  .chartwrap{background:var(--chart-surface);border:1px solid var(--line);border-radius:12px;padding:14px;}
+  .chartwrap .ct{font-size:13px;font-weight:700;}
+  .chartwrap .cs{font-size:11.5px;color:var(--faint);margin-top:2px;}
+  svg text{font-family:inherit;}
+  /* fact rows */
+  .grp-lbl{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.6px;margin:20px 0 8px;}
+  .grp-lbl .ln{flex:1;height:1px;background:var(--line);}
+  .fact{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px;
+    display:flex;gap:12px;align-items:flex-start;margin-bottom:9px;transition:.15s;}
+  .fact.done{background:#fbfffc;border-color:var(--ok-line);}
+  .fact.danger{border-color:var(--bad-line);background:#fffbfb;}
+  .fact .ft{flex:1;min-width:0;}
+  .fact .tt{font-size:14px;font-weight:700;}
+  .fact .tt .val{color:var(--brand);}
+  .fact .src{font-size:12px;color:var(--faint);margin-top:3px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+  .fact .do{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .fact .lead-ic{width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;
+    justify-content:center;font-size:13px;flex:none;margin-top:2px;}
+  .checkdot{width:18px;height:18px;border-radius:50%;background:var(--ok);color:#fff;display:inline-flex;
+    align-items:center;justify-content:center;font-size:11px;flex:none;margin-top:1px;}
+  /* confirmation ring panel */
+  .guard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);
+    position:sticky;top:14px;}
+  .ring{position:relative;width:132px;height:132px;margin:6px auto 10px;}
+  .ring svg{transform:rotate(-90deg);}
+  .ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .ring .num .n{font-size:34px;font-weight:800;line-height:1;color:var(--ink);}
+  .ring .num .t{font-size:11px;color:var(--faint);margin-top:3px;}
+  .guard ul{list-style:none;font-size:12px;color:var(--muted);display:grid;gap:6px;margin-top:10px;}
+  .guard ul li{display:flex;gap:7px;align-items:flex-start;}
+  /* outline editor */
+  .row-page{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);
+    border-radius:11px;padding:9px 12px;margin-bottom:7px;}
+  .row-page .idx{width:26px;height:26px;border-radius:8px;background:var(--brand-soft);color:var(--brand);
+    display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex:none;}
+  .row-page .tp{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;
+    background:var(--bg);border-radius:5px;padding:2px 7px;flex:none;}
+  .row-page [contenteditable]{flex:1;font-size:14px;font-weight:600;border-radius:7px;padding:3px 6px;
+    outline:none;min-width:0;}
+  .row-page [contenteditable]:hover{background:var(--bg);}
+  .row-page [contenteditable]:focus{background:#fff;box-shadow:0 0 0 2px var(--brand);}
+  .row-page .acts{display:flex;gap:4px;flex:none;opacity:0;transition:.15s;}
+  .row-page:hover .acts{opacity:1;}
+  .mini-btn{width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:#fff;
+    cursor:pointer;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;}
+  .mini-btn:hover{border-color:var(--brand);color:var(--brand);}
+  .mini-btn.del:hover{border-color:var(--bad);color:var(--bad);}
+  /* preview slides */
+  .pv-wrap{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start;}
+  .thumbs{display:flex;flex-direction:column;gap:7px;}
+  .thumb{border:1px solid var(--line);border-radius:9px;background:#fff;padding:7px 9px;cursor:pointer;
+    font-size:11.5px;color:var(--muted);text-align:left;display:flex;gap:7px;align-items:center;}
+  .thumb .no{width:18px;height:18px;border-radius:5px;background:var(--brand-soft);color:var(--brand);
+    display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex:none;}
+  .thumb.cur{border-color:var(--brand);background:var(--brand-faint);color:var(--ink);font-weight:700;}
+  .stage{background:#e8ebf3;border:1px solid var(--line);border-radius:12px;padding:22px 28px;}
+  .slide{aspect-ratio:16/9;background:#fff;border-radius:10px;box-shadow:var(--shadow-lg);
+    padding:30px 40px;position:relative;display:flex;flex-direction:column;overflow:hidden;}
+  .slide .sband{position:absolute;top:10px;right:12px;font-size:10.5px;color:#b8c0d0;
+    letter-spacing:.5px;display:flex;gap:6px;align-items:center;}
+  .slide .smark{position:absolute;right:16px;bottom:14px;font-size:11px;color:#b8c0d0;
+    display:flex;gap:6px;align-items:center;}
+  .slide .conf-seal{position:absolute;left:16px;bottom:12px;display:flex;gap:5px;align-items:center;
+    font-size:11px;font-weight:800;color:var(--ok);}
+  .sl-eyebrow{font-size:11px;font-weight:800;letter-spacing:1.6px;color:var(--brand);text-transform:uppercase;}
+  .sl-title{font-size:27px;font-weight:800;line-height:1.25;margin-top:6px;}
+  .sl-sub{color:var(--muted);font-size:13.5px;margin-top:5px;}
+  .sl-body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;}
+  .sv-nav{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;}
+  /* timeline / misc */
+  .tl{display:flex;align-items:flex-start;}
+  .tl .node{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
+  .tl .line{height:3px;background:#e5e9f3;flex:1;margin-top:11px;}
+  .tl .node .p{width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;position:relative;z-index:1;flex:none;}
+  .tl .node .pt{font-size:11px;color:var(--muted);margin-top:3px;}
+  .tl .node .lb{font-size:11.5px;font-weight:700;margin-top:3px;text-align:center;line-height:1.35;}
+  .kvs{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:12.5px;}
+  .kvs b{color:var(--muted);font-weight:600;}
+  .ok-big{display:inline-flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--ok-line);
+    border-radius:999px;padding:9px 18px;font-weight:800;color:var(--ok);box-shadow:var(--shadow);}
+  .shield{font-size:46px;line-height:1;}
+  /* load overlay */
+  #load{position:fixed;inset:0;background:rgba(24,29,45,.34);display:flex;align-items:center;
+    justify-content:center;z-index:60;backdrop-filter:blur(2px);}
+  .loadcard{background:#fff;border-radius:16px;padding:26px 30px;width:min(420px,90vw);
+    box-shadow:var(--shadow-lg);text-align:center;}
+  .orb{width:44px;height:44px;margin:0 auto 14px;border-radius:12px;
+    background:conic-gradient(from 0deg,#2f4ed7,#8fa3ef,#2f4ed7);
+    animation:spin 1s linear infinite;display:flex;align-items:center;justify-content:center;}
+  .orb .in{width:26px;height:26px;border-radius:8px;background:#fff;animation:spin 1s linear infinite reverse;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loadcard .lm{font-size:14px;font-weight:700;color:var(--ink);}
+  .loadcard .ls{font-size:12px;color:var(--muted);margin-top:4px;min-height:18px;}
+  .prog{height:5px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:16px;}
+  .prog i{display:block;height:100%;width:0;background:var(--brand);border-radius:99px;transition:width .3s;}
+  .hidden{display:none!important;}
+  #toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:70;
+    background:#1c2434;color:#fff;font-size:13px;border-radius:11px;padding:11px 18px;
+    box-shadow:var(--shadow-lg);max-width:min(560px,90vw);display:flex;gap:9px;align-items:center;
+    transition:.25s;opacity:0;pointer-events:none;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+  #toast.oktoast{background:#0e5f30;}
+  #toast.warntoast{background:#8a4b06;}
+  .bump{animation:bump .4s;}
+  @keyframes bump{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
+  .typing-dots span{display:inline-block;animation:blink 1.2s infinite;}
+  .typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+  .foot{margin:26px auto 6px;text-align:center;color:var(--faint);font-size:12px;}
+  @media(max-width:860px){
+    .cols2,.cols2r{grid-template-columns:1fr;}
+    .pv-wrap{grid-template-columns:1fr;}
+    .thumbs{flex-direction:row;flex-wrap:wrap;}
+    .stp .lab{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="simstrip">
+  <b>DeckSure · 可交互产品原型（Prototype Preview）</b>
+  <span class="pill">前端模拟</span>
+  本页可点击走完一次完整创作过程；AI 内容/图表生成以过渡动画示意，非真实服务。演示数据与公司名均为虚构。
+</div>
+
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand"><span class="logo">✓</span>Deck<span>Sure</span></div>
+    <div class="stepper" id="stepper"></div>
+    <div class="ctx">
+      <span class="chip">🎬 <b>客户提案</b></span>
+      <span class="chip">🏷 Volante Retail Group</span>
+      <span class="chip">⏱ 30 分钟</span>
+      <span class="avatar">S</span>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- ═══════════ Screen 1 · 输入与场合识别（A） ═══════════ -->
+    <section class="screen active" id="scr1">
+      <div class="inner">
+        <div class="head">
+          <span class="eyebrow">AI 创作起点 · 输入与场合识别</span>
+          <h1>把今晚的想法，变成明天能放心上会的方案</h1>
+          <p class="sub">你好 Sasha——距离明天的客户演示还有一晚。把要讲的东西抛进来，DeckSure 帮你从结构到数据口径一次性理顺。</p>
+        </div>
+
+        <div class="divbar"><span class="ai">🤖 本步 AI 自主：理解输入、识别场合与素材</span><span class="sep"></span><span class="tagProto">原型模拟</span></div>
+
+        <div class="grid cols2">
+          <div class="card">
+            <div class="lbl">你的想法（可自由改写，示例已为你填好）</div>
+            <textarea id="idea" rows="9" spellcheck="false"
+              placeholder="用一句话或几行要点描述你想呈现的核心价值…">给 Volante Retail Group（跨国零售集团，欧洲 24 国、约 2,100 家门店）做一次 30 分钟商业价值提案：
+- 我们的需求预测与库存优化方案 Meridian Demand Intelligence
+- 亮点 1：DACH 试点 3 个市场 260 SKU、24 周实测——平均净销售额提升约 +4.2%（vs 对照组），缺货率 7.9% → 6.5%（相对下降 18%）
+- 亮点 2：试点后预测准确率 64% → 81%
+- ROI：规模化后年化库存成本节省约 €1.8M，静态回本约 5.7 个月（此项由试点外推，需重点复核）
+- 他们有行业基准参考：最佳 85% vs 行业平均 68% 预测准确率（Aberdeen Research 2024）
+- 客户高层把「库存效率」列为年度优先项（销售纪要）
+- 目标：让他们信服——先做 3 市场扩展试点，再谈全国铺开</textarea>
+            <div class="btnrow" style="margin-top:10px">
+              <button class="btn ghost" onclick="document.getElementById('idea').value=IDEA_DEFAULT">↺ 还原示例文本</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom:12px">
+              <div class="lbl">素材来源（已附带，将作为口径与出处锚点）</div>
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <span class="filechip"><span class="ic">CSV</span>pilot_sales_dach.csv<span class="y">✓ 已解析</span></span>
+                <span class="filechip"><span class="ic">XL</span>stockout_weekly_24w.xlsx<span class="y">✓ 已解析</span></span>
+                <span class="filechip"><span class="ic">PDF</span>Aberdeen_2024_ForecastMaturity.pdf<span class="y">✓ 来源已记录</span></span>
+                <span class="filechip"><span class="ic">DOC</span>sales_call_notes_volante.docx<span class="y">✓ 已提取要点</span></span>
+              </div>
+              <p class="tiny faint" style="margin-top:9px">真实产品中支持直接上传文件；原型的解析为示意。</p>
+            </div>
+
+            <div class="card">
+              <div class="lbl">演示场合（决定结构取向与版式密度）</div>
+              <div style="display:flex;flex-direction:column;gap:8px" id="sceneWrap">
+                <label class="option sel" data-scene="client"><span class="radio"></span>
+                  <span style="flex:1"><b>客户提案 · Business Proposal</b><div class="small muted">面向潜在客户的方案商业价值演示——更重 ROI 证据与落地路径</div></span></label>
+                <label class="option" data-scene="investor"><span class="radio"></span>
+                  <span style="flex:1"><b>投资人路演 · Investor Pitch</b><div class="small muted">面向资本的市场机会与增长故事——更重 TAM 与护城河</div></span></label>
+              </div>
+
+              <div class="lbl" style="margin-top:14px">输出语言（DeckSure 支持多语言成稿）</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap" id="langWrap">
+                <button class="mini lang" data-lang="中文">中文</button>
+                <button class="mini lang" data-lang="English">English</button>
+                <button class="mini lang" data-lang="日本語">日本語</button>
+                <button class="mini lang" data-lang="한국어">한국어</button>
+              </div>
+              <p class="tiny faint" style="margin-top:8px">本演示场景选择「中文」；其余语言示意能力范围。内容结构在不同语言下保持一致，事实口径不随翻译变化。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:14px">
+          <span>💡</span>
+          <span>DeckSure 的第一原则：<b>AI 只负责“生成”与“起草”，凡是会被客户采信的事实与数字，都会在定稿前逐项交回给你确认</b>。接下来你会看到每一步由谁做主——AI 自主的部分会标注 🤖，需要你把关的节点会标注 ✋。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ Screen 2 · 框架搭建（B） ═══════════ -->
+    <section class="screen" id="scr2">
+      <div class="inner">
+        <div class="head">
+          <span class="eyebrow">第 2 步 · 框架搭建</span>
+          <h1>三套结构方案，你挑一版</h1>
+          <p class="sub">AI 已结合「客户提案 × 数据/ROI 导向 × 你的素材」预演了三套叙述结构。结构决定了客户跟着你思考的路线——这是第一个该由你把关的判断节点。</p>
+        </div>
+
+        <div class="divbar"><span class="ai">🤖 AI 已代劳：按场合匹配模板并生成 3 套结构</span><span class="sep"></span><span class="human">✋ 由你把关：采用哪一套</span><span class="sep"></span><span class="tagProto">原型模拟</span></div>
+
+        <div class="grid" id="frameWrap" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))"></div>
+
+        <div class="note" style="margin-top:14px">
+          <span>✋</span>
+          <span><b>判断节点说明：</b>结构方案由 AI 给、由你选。此处不自动替你决定，因为面对的是正式客户——叙述主线的选择影响整场可信度，值得你花 30 秒拍板。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ Screen 3 · 大纲确认（C） ═══════════ -->
+    <section class="screen" id="scr3">
+      <div class="inner">
+        <div class="head">
+          <span class="eyebrow">第 3 步 · 大纲确认</span>
+          <h1>页面大纲：可增、可删、可改名</h1>
+          <p class="sub">这是你“拥有”这稿子的大纲。逐页点开可直接修改标题、删除或新增页面，再让 AI 按此成稿。</p>
+        </div>
+
+        <div class="divbar"><span class="ai">🤖 AI 已代劳：按所选结构起草页面顺序</span><span class="sep"></span><span class="human">✋ 由你把关：增删改每一页</span></div>
+
+        <div class="grid cols2r">
+          <div class="card">
+            <div class="lbl">页面大纲 <span class="faint">（点标题可直接改名 · 悬停行可上移/下移/删除）</span></div>
+            <div id="pageList"></div>
+            <div class="btnrow" style="margin-top:10px">
+              <button class="btn ghost" onclick="addPage('正文页')">＋ 新增一页</button>
+              <button class="btn ghost" onclick="addPage('数据图表页')">＋ 图表页</button>
+              <button class="btn ghost" onclick="addPage('时间线页')">＋ 时间线页</button>
+            </div>
+          </div>
+          <div>
+            <div class="guard" style="position:static">
+              <h3 style="margin-bottom:6px">成稿预检</h3>
+              <div class="kvs" id="outlineCheck">
+                <b>总页数</b><span id="ocPages">8</span>
+                <b>预估讲述</b><span>每页 ≈ 2.5–3 分钟 · 约 22–28 分钟，贴合 30 分钟议程</span>
+                <b>页型配比</b><span id="ocMix">数据/证据页占比较高，匹配“客户看重 ROI”</span>
+                <b>默认处理</b><span>致谢页与备用页已收进“附录”，不进主流程</span>
+              </div>
+              <p class="small muted" style="margin-top:10px">改到满意后点“据此成稿”：
+              AI 将按大纲生成内容草样与图表——此阶段<b>所有关键数字仍处于“待确认”</b>，不会冒充定稿口径。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ Screen 4 · 内容与图表生成（D） ═══════════ -->
+    <section class="screen" id="scr4">
+      <div class="inner">
+        <div class="head">
+          <span class="eyebrow">第 4 步 · 内容与图表生成</span>
+          <h1>初稿成稿与示意图表已生成</h1>
+          <p class="sub">AI 已按大纲填好内容草样、画好图表，并自动把关键数字标成「待确认」——在你逐项核对前，这些数字<b>不具备交付效力</b>。</p>
+        </div>
+
+        <div class="divbar"><span class="ai">🤖 AI 自主完成：版式、正文草稿、图表渲染（模拟）</span><span class="sep"></span><span class="warn chipstate" id="pendingBannerS4">⚠ 关键数字待确认</span></div>
+
+        <div class="note warnbg" style="margin-bottom:16px">
+          <span>⚠️</span>
+          <span><b>现在看到的数字仍是“草稿值”。</b>它们来自你导入的试点数据与行业来源，但尚未与你逐项比对口径。正式场合会直接复用这里的图表数据，所以下一步 <b>“事实与数据核对”</b> 是定稿前的关卡。</span>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h3 style="display:flex;justify-content:space-between;align-items:center">试点关键指标一览
+              <span class="tiny faint">自动汇总自 pilot_sales_dach.csv · stockout_weekly_24w.xlsx</span></h3>
+            <div class="stats" id="statTiles"></div>
+          </div>
+
+          <div class="grid cols2r">
+            <div class="chartwrap" id="chLift">
+              <div class="ct">各市场试点净销售提升 <span class="tiny faint">· 与同期对照组之差（24 周）</span></div>
+              <div class="cs">逐市场读数 + 均值线——即将在第 5 步与源数据逐项核对口径</div>
+            </div>
+            <div class="chartwrap" id="chStock">
+              <div class="ct">关键 SKU 缺货率走势 <span class="tiny faint">· 试点 24 周</span></div>
+              <div class="cs">7.9% → 6.5%，相对下降 18%（示意渲染）</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:14px">
+          <span>🔎</span>
+          <span>DeckSure 会在成稿草样里自动定位“会被客户采信”的句子与数字（标为 <b class="chipstate warn" style="font-size:11px">待确认</b>），把容易出错的外推口径单独标红。下一步的核对页会列出全部清单。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ Screen 5 · 事实与数据核对（E 核心） ═══════════ -->
+    <section class="screen" id="scr5">
+      <div class="inner">
+        <div class="head">
+          <span class="eyebrow">第 5 步 · 事实与数据核对 <span class="tagProto">本产品信任核心</span></span>
+          <h1>逐项核对：每一处会被客户采信的内容</h1>
+          <p class="sub">这些数字明天会直接出现在客户面前。AI 已替你定位每一处事实、比对到文件出处、并标出可疑项——<b>现在由你逐项拍板</b>。只要还有一项未确认，DeckSure 就会锁定“定稿 / 导出”。</p>
+        </div>
+
+        <div class="divbar"><span class="ai">🤖 AI 已代劳：定位事实 → 比对来源 → 标注可疑项</span><span class="sep"></span><span class="human">✋ 关键判断节点：每个数字是否采信、口径是否成立，由你逐项确认</span></div>
+
+        <div class="grid cols2">
+          <div>
+            <div id="factList"></div>
+
+            <div id="factAccel" class="hidden" style="margin-top:6px">
+              <button class="btn ghost" onclick="markAllConfirmed()">⚡ 演示加速：全部标记为已核实（跳过逐项点击）</button>
+            </div>
+          </div>
+
+          <aside class="guard">
+            <h3 style="text-align:center;font-size:14px">定稿看门（Trust Gate）</h3>
+            <div class="ring">
+              <svg width="132" height="132" viewBox="0 0 132 132">
+                <circle cx="66" cy="66" r="56" fill="none" stroke="#e9ecf4" stroke-width="12"/>
+                <circle id="ringFg" cx="66" cy="66" r="56" fill="none" stroke="#2f4ed7" stroke-width="12"
+                  stroke-linecap="round" stroke-dasharray="352 352" stroke-dashoffset="352"/>
+              </svg>
+              <div class="num"><span class="n" id="guardN">—</span><span class="t">剩余待确认</span></div>
+            </div>
+            <ul>
+              <li>🟢 已确认 —— 口径由你背书，可用于成稿与图表</li>
+              <li>🟡 待确认 —— 有出处，但尚未经你核对</li>
+              <li>🔴 无来源 ⚠ —— AI 外推或不可追溯，定稿前必须处理</li>
+            </ul>
+            <div id="guardMsg" class="note warnbg" style="margin-top:12px">
+              <span>🔒</span><span id="guardTxt">仍有未确认项：导出与“已确认”状态处于锁定。</span>
+            </div>
+            <div id="guardOk" class="hidden" style="margin-top:12px">
+              <div class="ok-big" style="width:100%;justify-content:center">✓ 全部确认 · 可放心交付</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ Screen 6 · 成稿预览（F） ═══════════ -->
+    <section class="screen" id="scr6">
+      <div class="inner">
+        <div class="head">
+          <span class="eyebrow">第 6 步 · 成稿预览</span>
+          <h1>成稿预览 —— 全部关键事实已确认</h1>
+          <p class="sub">以下为最终成稿的关键页示意（完整稿 8 页，此处展示代表页）。每页数据均为你在上一步确认过的口径，可放心用于明天正式汇报。</p>
+        </div>
+
+        <div class="divbar"><span class="ai">🤖 AI 完成成稿排版</span><span class="sep"></span><span class="ok chipstate" id="allClearChip">✓ 全部已确认 · 可放心交付</span></div>
+
+        <div class="pv-wrap">
+          <div class="thumbs" id="thumbs"></div>
+          <div>
+            <div class="stage" id="slideMount"></div>
+            <div class="sv-nav">
+              <button class="btn ghost" onclick="pvNav(-1)">‹ 上一页</button>
+              <button class="btn ghost" onclick="pvNav(1)">下一页 ›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ Screen 7 · 交付完成态（G） ═══════════ -->
+    <section class="screen" id="scr7">
+      <div class="inner">
+        <div class="head" style="text-align:center">
+          <div style="display:flex;justify-content:center;margin-bottom:6px"><span class="shield">🛡️</span></div>
+          <h1>待确认已清零，这稿可以放心上会了</h1>
+          <p class="sub" style="margin-left:auto;margin-right:auto">从今晚的想法到可正式交付的方案，一路的判断节点都已由你把关完成。</p>
+        </div>
+
+        <div class="grid cols2r">
+          <div class="card">
+            <h3>本次创作 · 达成态</h3>
+            <div class="stats" style="margin-top:4px">
+              <div class="stat"><div class="k">事实核对</div><div class="v" style="color:var(--ok)">6/6</div><div class="d">已逐项确认</div></div>
+              <div class="stat"><div class="k">无来源项</div><div class="v">0</div><div class="d">已改写为审慎表述或补充出处</div></div>
+              <div class="stat"><div class="k">页面</div><div class="v">8</div><div class="d">完整稿 · 展示代表页</div></div>
+              <div class="stat"><div class="k">讲述时长</div><div class="v" style="font-size:20px">≈26 分</div><div class="d">贴合 30 分钟议程</div></div>
+            </div>
+
+            <div class="btnrow" style="margin-top:16px">
+              <button class="btn" onclick="toast('已导出 DeckSure_VolanteRetail_提案_v1.0_已确认.pptx（原型模拟）','oktoast')">⬇ 导出 PPTX</button>
+              <button class="btn" onclick="toast('已生成 PDF 讲稿版（原型模拟）','oktoast')">⬇ 导出 PDF</button>
+              <button class="btn ghost" onclick="toast('已进入演示模式：全屏 + 演讲者备注 + 逐页口径提示（原型模拟）')">▶ 开始演示</button>
+            </div>
+            <p class="tiny faint" style="margin-top:9px">导出在存在未确认项时被锁定；本稿已解锁。以上导出/演示在原型中为模拟反馈。</p>
+          </div>
+
+          <div class="card">
+            <h3>数据溯源清单（Trust Report）</h3>
+            <p class="small muted" style="margin-bottom:8px">每一处被客户采信的数字，都可回溯到出处与“由谁、何时确认”。</p>
+            <div id="trustReport" style="display:flex;flex-direction:column;gap:6px"></div>
+            <div class="note" style="margin-top:12px">
+              <span>🛡️</span>
+              <span>正因为“定稿 = 全部事实经你确认”，你带着这稿上场时，每一个数字背后都有出处与你的背书——<b>现场被问住的风险被提前拆解</b>。</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="foot">DeckSure · 生成 + 确认 —— 让 AI 文稿经得起正式场合 · 交互原型（前端模拟，非真实服务）</div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="nav">
+    <button class="btn ghost" id="prevBtn">‹ 上一步</button>
+    <div class="hint" id="navHint"></div>
+    <button class="btn" id="nextBtn"></button>
+  </footer>
+</div>
+
+<div id="load" class="hidden">
+  <div class="loadcard">
+    <div class="orb"><div class="in"></div></div>
+    <div class="lm" id="loadTitle">正在生成…</div>
+    <div class="ls" id="loadSub"></div>
+    <div class="prog"><i id="loadProg"></i></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ═══════════════ 数据与常量 ═══════════════ */
+var IDEA_DEFAULT = document.getElementById('idea').value; /* snapshot the prefill */
+
+var STEPS = ["想法输入","框架选择","大纲确认","内容与图表","事实核对","成稿预览","交付完成"];
+var FRAMES = {
+  A:{
+    name:"方案 A · 商业价值论证", badge:"建议首选",
+    why:"该客户与决策层最看重 ROI 证据。本结构把「试点实证」与「规模化 ROI」前置为独立证据页，讲完数据再谈合作，符合 B2B 售前标准打法。",
+    suitable:"B2B 客户提案 · 决策层 · 重数据与 ROI",
+    pages:["封面：向 Volante Retail 提案商业价值","客户的业务环境与当下挑战","为什么是现在：数据可见性缺口","方案概览：Meridian Demand Intelligence","试点实证：3 个欧洲市场（数据页）","规模化价值与 ROI","实施路径与时间线","下一步：试点合作建议"]
+  },
+  B:{
+    name:"方案 B · 诊断式（问题 → 根因 → 解法）", badge:"备选",
+    why:"更适合客户内部尚未就“问题”达成共识的情况，先帮他们认清代价，再给解法。",
+    suitable:"需要先“唤起痛感”的客户 · 内部有争议",
+    pages:["封面","让数据说话：三个代价高昂的缺口","根因：为什么预测总不准","方案与试点证据","ROI 测算","实施路径与时间线","下一步与合作建议"]
+  },
+  C:{
+    name:"方案 C · 战略共创叙事", badge:"备选",
+    why:"更高站位、更长线的联合创新故事；若现场有集团级战略层，可用来抬高议题。缺点是 ROI 证据后置。",
+    suitable:"战略层观众 · 争取联合创新项目",
+    pages:["封面","零售数智化：为什么所有同行都在补预测能力","共同愿景：需求驱动型供应链","联合试点方案","价值共创与数据治理","3 年路线图","下一步：启动工作坊"]
+  }
+};
+var OUTLINES = {};
+for (var k in FRAMES) OUTLINES[k] = FRAMES[k].pages.slice();
+
+var LIFT = [
+  {label:"DE 德国", v:3.6},
+  {label:"AT 奥地利", v:4.5},
+  {label:"CH 瑞士", v:4.7}
+];
+var STOCK = [
+  {label:"W4", v:7.9},{label:"W8", v:7.6},{label:"W12", v:7.4},
+  {label:"W16", v:7.1},{label:"W20", v:6.8},{label:"W24", v:6.5}
+];
+
+/* 事实清单：status 可取值 final 判定：
+   trusted(来源可信) / pending(待确认) / nosource(无来源,需处理) / confirmed(已确认) */
+var FACTS = [
+  {g:"试点实测结果（出处：你导入的试点数据）", gicon:"📊",
+    rows:[
+      {id:"f1", val:"+4.2%",
+       txt:"试点平均净销售额提升（3 市场 × 260 SKU × 24 周，与同期对照组之差）",
+       src:"已定位源文件 pilot_sales_dach.csv → 本地汇总口径",
+       status:"pending", opt:null},
+      {id:"f2", val:"7.9% → 6.5%",
+       txt:"关键 SKU 缺货率，试点期间走势（相对下降 18%）",
+       src:"已定位源文件 stockout_weekly_24w.xlsx · 周度统计口径",
+       status:"pending", opt:null},
+      {id:"f3", val:"64% → 81%",
+       txt:"试点后预测准确率提升（试点前基线 vs 试点期末）",
+       src:"pilot_sales_dach.csv · accuracy 字段",
+       status:"pending", opt:null}
+    ]},
+  {g:"外部行业基准（有第三方来源）", gicon:"🏛",
+    rows:[
+      {id:"f4", val:"85% / 68%",
+       txt:"预测准确率 Best-in-class 85% vs 行业平均 68%",
+       src:"Aberdeen Research, “Forecasting Maturity”, 2024（可公开获取，PDF 已归档）",
+       status:"trusted", opt:null}
+    ]},
+  {g:"AI 外推的推断值（无直接来源 —— 最需人工把关）", gicon:"🧮",
+    rows:[
+      {id:"f5", val:"≈ €1.8M / 年",
+       txt:"规模化后年化库存成本节省（精确值表述）",
+       src:"⚠ 无直接出处 —— 由「试点结果 × 客户规模」线性外推得出，未经任何顾问测算文件佐证",
+       status:"nosource",
+       opt:["补充出处","改为审慎区间表述"]},
+      {id:"f6", val:"约 5.7 个月",
+       txt:"规模化 ROI 静态回本周期（派生指标）",
+       src:"派生自第 5 项「成本节省」与「实施投入 ≈ €850K」——上游口径变化会自动重算",
+       status:"derived", parent:"f5", opt:null}
+    ]},
+  {g:"客户侧事实（来自销售纪要）", gicon:"🏢",
+    rows:[
+      {id:"f7", val:"24 国 / 2,100 店 / ≈ €38B",
+       txt:"Volante Retail Group：覆盖欧洲 24 国、约 2,100 家门店、年营收约 €38B",
+       src:"sales_call_notes_volante.docx（客户经理纪要，2025-06）——建议与客户经理复核后再采信",
+       status:"pending", opt:null}
+    ]}
+];
+
+/* 事实状态机 */
+var factState = {};     // id -> status
+var factSrcText = {};   // id -> current source line
+var factValText = {};   // id -> current value text (for f5 derived)
+var factTxtMap = {};    // id -> base text template
+var factValMap = {};
+(function initFacts(){
+  FACTS.forEach(function(g){ g.rows.forEach(function(r){
+    factState[r.id]=r.status; factSrcText[r.id]=r.src; factValMap[r.id]=r.val;
+  });});
+})();
+
+/* ═══════════════ 状态 ═══════════════ */
+var state = { step:0, scene:"client", lang:"中文", selFrame:null, pvCur:0, visited4:false };
+var busy=false;
+
+/* ═══════════════ 工具 ═══════════════ */
+function $(id){return document.getElementById(id);}
+function el(html){var d=document.createElement('div');d.innerHTML=html;return d.firstElementChild;}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg, kind){
+  var t=$('toast'); t.textContent=msg; t.className='show '+(kind||'');
+  clearTimeout(t._h); t._h=setTimeout(function(){t.className='';},2600);
+}
+function statusChip(st, small){
+  var m={
+    trusted:{c:'ok', i:'✓', t:'可信（来源已校验）'},
+    pending:{c:'warn', i:'⏳', t:'待确认'},
+    nosource:{c:'bad', i:'⚠', t:'无来源'},
+    confirmed:{c:'ok', i:'✓', t:'已确认'},
+    derived:{c:'info', i:'↳', t:'派生 · 随上游更新'},
+    derivedLock:{c:'info', i:'↳', t:'派生 · 随上游锁定'}
+  }[st];
+  return '<span class="chipstate '+m.c+' '+(small?'tiny':'')+'" style="'+(small?'font-size:11px;padding:1px 8px;':'')+'">'+m.i+' '+m.t+'</span>';
+}
+
+/* ═══════════════ 步骤导航 ═══════════════ */
+var NEXT_LABEL=["生成可选框架 →","采用所选框架 →","据此生成内容与图表 →","前往逐项核对 (n) →","进入成稿预览 →","完成并交付 →","开始使用（重来一轮）"];
+var HINT=[
+  "输入会决定后续一切 · 场景、语言、素材三处都可改",
+  "AI 给结构、你拍板 —— 这一步是叙述主线的判断节点",
+  "大纲由你掌控，随时可改；AI 之后只按此成稿",
+  "数字目前都是草稿值，还不具备交付效力",
+  "只需存在 1 项未确认，定稿就会被锁定 —— 这是信任闸门",
+  "预览确认无虞，即可进入交付",
+  "达成态：待确认清零 · 数据带溯源 · 可放心用于正式场合"
+];
+var CONFIRM_LABEL=["我已核实，以此为口径 ✓","采用此框架 → 大纲确认","据此生成内容与图表 →","前往逐项核对 (n) →","进入成稿预览 →","完成并交付 →","重新演示一轮 ↺"];
+
+function refreshStepper(){
+  var h='';
+  STEPS.forEach(function(s,i){
+    var cls = i<state.step?'done':(i===state.step?'cur':'');
+    var ic = i<state.step?'✓':(i+1);
+    h+='<div class="stp '+cls+'">'+(i>0?'<span class="bar"></span>':'')+
+       '<span class="dot">'+ic+'</span><span class="lab">'+s+'</span></div>';
+  });
+  $('stepper').innerHTML=h;
+}
+function go(n){
+  state.step=n;
+  document.querySelectorAll('.screen').forEach(function(s,i){
+    s.classList.toggle('active', i===n);
+  });
+  refreshStepper();
+  // stage-specific
+  if(n===1){ renderFrames(); }
+  if(n===2){ renderOutline(); }
+  if(n===3){ if(!state.visited4){state.visited4=true;} renderStage4(); }
+  if(n===4){ renderFacts(); }
+  if(n===5){ state.pvCur=0; renderThumbs(); renderSlide(); }
+  if(n===6){ renderTrustReport(); }
+  updateNav();
+}
+function updateNav(){
+  var prev=$('prevBtn');
+  prev.disabled = state.step===0;
+  $('navHint').innerHTML = '<b>'+HINT[state.step]+'</b>';
+  var nb=$('nextBtn');
+  if(state.step===6){ nb.textContent='↺ 重新演示一轮'; }
+  else{ nb.textContent = NEXT_LABEL[state.step].replace('(n)', remainingCount()>0?'（剩余 '+remainingCount()+' 项）':''); }
+}
+$('prevBtn').onclick=function(){ if(state.step>0) go(state.step-1); };
+$('nextBtn').onclick=function(){
+  if(busy) return;
+  switch(state.step){
+    case 0:
+      var idea=$('idea').value.trim();
+      if(!idea){ toast('请先写点想法，或点“还原示例文本”。','warntoast'); return; }
+      runBusy("正在理解你的输入与素材…",
+        ["读取想法与场合","定位 4 份素材","抽取关键数字与口径锚点","比对你与行业的数据角色","预演 3 套叙述结构"], 1900,
+        function(){ go(1); });
+      break;
+    case 1:
+      if(!state.selFrame){ toast('请先选定一套叙述结构 —— 这正是需要你把关的判断节点。','warntoast'); return; }
+      go(2); break;
+    case 2:
+      runBusy("正在按大纲成稿…",
+        ["依据所选结构起草 8 页正文","为数据页排布图表占位","将 6 处关键数字标为待确认"], 1800,
+        function(){ go(3); });
+      break;
+    case 3: go(4); break;
+    case 4:
+      // 信任闸门：事实核对未清零，不允许进入成稿预览（定稿路径被锁定）
+      if(remainingCount()>0){ toast('仍有 '+remainingCount()+' 项未确认 —— 存在未确认项时无法进入定稿。','warntoast'); return; }
+      go(5); break;
+    case 5: go(6); break;
+    case 6: restart(); break;
+  }
+};
+
+function restart(){
+  state={step:0,scene:'client',lang:'中文',selFrame:null,pvCur:0,visited4:false};
+  factState={}; factSrcText={};
+  (function(){ FACTS.forEach(function(g){ g.rows.forEach(function(r){ factState[r.id]=r.status; factSrcText[r.id]=r.src; factValMap[r.id]=r.val; });}); })();
+  $('sceneWrap').querySelectorAll('.option').forEach(function(o){
+    o.classList.toggle('sel', o.getAttribute('data-scene')==='client');
+  });
+  $('langWrap').querySelectorAll('.lang').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-lang')==='中文');
+  });
+  $('idea').value = IDEA_DEFAULT;
+  go(0);
+}
+
+/* ═══════════════ busy overlay ═══════════════ */
+function runBusy(title, msgs, dur, cb){
+  busy=true;
+  var L=$('load'); L.classList.remove('hidden');
+  $('loadTitle').textContent=title; $('loadProg').style.width='0%';
+  var i=0; $('loadSub').textContent=msgs[i];
+  var ti=setInterval(function(){ i=(i+1)%msgs.length; $('loadSub').textContent=msgs[i]; }, 420);
+  var t0=Date.now();
+  var pi=setInterval(function(){
+    var p=Math.min(100,(Date.now()-t0)/dur*100);
+    $('loadProg').style.width=p+'%';
+  },60);
+  setTimeout(function(){
+    clearInterval(ti); clearInterval(pi);
+    L.classList.add('hidden'); busy=false;
+    if(cb) cb();
+  },dur);
+}
+
+/* ═══════════════ Stage 1 · scene & lang ═══════════════ */
+$('sceneWrap').onclick=function(e){
+  var o=e.target.closest('.option'); if(!o) return;
+  state.scene=o.getAttribute('data-scene');
+  this.querySelectorAll('.option').forEach(function(x){x.classList.toggle('sel',x===o);});
+};
+$('langWrap').onclick=function(e){
+  var b=e.target.closest('.lang'); if(!b) return;
+  state.lang=b.getAttribute('data-lang');
+  this.querySelectorAll('.lang').forEach(function(x){x.classList.toggle('on',x===b);});
+  toast('输出语言已设为 '+state.lang+'（原型界面仍以中文展示；成稿内容语言在真实产品中切换）');
+};
+document.querySelectorAll('.lang').forEach(function(b){
+  b.className+=' miniBtnStyle';
+});
+
+/* ═══════════════ Stage 2 · frameworks ═══════════════ */
+function frameCard(k,f){
+  var badge = f.badge==='建议首选'
+    ? '<span class="chipstate ok tiny" style="margin-left:auto">★ '+f.badge+'</span>'
+    : '<span class="chipstate info tiny" style="margin-left:auto">'+f.badge+'</span>';
+  var chips = f.pages.slice(0,4).map(function(p,i){
+    var t = p.match(/^(封面|.*(数据|ROI|时间线|合作|试))?/);
+    var tag = slideTag(p);
+    return '<span style="display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--muted)"><span class="idx" style="width:18px;height:18px;border-radius:5px;background:var(--brand-soft);color:var(--brand);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex:none">'+(i+1)+'</span>'
+      +'<span><span class="tagAI" style="margin-right:5px">'+tag+'</span>'+esc(p)+'</span></span>';
+  }).join('');
+  return '<label class="option" data-f="'+k+'"><span class="radio"></span>'+
+    '<span style="flex:1;min-width:0">'+
+      '<span style="display:flex;align-items:center;gap:8px"><b style="font-size:15px">'+esc(f.name)+'</b>'+badge+'</span>'+
+      '<div class="small muted" style="margin:6px 0 10px">'+esc(f.suitable)+'</div>'+
+      '<div style="display:flex;flex-direction:column;gap:5px">'+chips+'</div>'+
+      '<div class="tiny faint" style="margin-top:8px">…共 '+f.pages.length+' 页</div>'+
+      (f.badge==='建议首选'?'<div class="tiny" style="color:var(--brand);margin-top:7px">💡 为何建议：'+esc(f.why)+'</div>':'')+
+    '</span></label>';
+}
+function slideTag(title){
+  if(/封面/.test(title)) return '封面';
+  if(/ROI|价值|测算/.test(title)) return 'ROI';
+  if(/数据|实证/.test(title)) return '数据';
+  if(/时间线|路径/.test(title)) return '时间线';
+  if(/合作|下一步/.test(title)) return '收尾';
+  return '正文';
+}
+function renderFrames(){
+  var w=$('frameWrap'); if(w.dataset.rendered) return; w.dataset.rendered=1;
+  var h='';
+  for(var k in FRAMES) h+=frameCard(k,FRAMES[k]);
+  w.innerHTML=h;
+  w.onclick=function(e){
+    var o=e.target.closest('.option'); if(!o) return;
+    state.selFrame=o.getAttribute('data-f');
+    w.querySelectorAll('.option').forEach(function(x){x.classList.toggle('sel',x===o);});
+    toast('已选「'+FRAMES[state.selFrame].name+'」——点击底部按钮确认进入大纲。');
+  };
+}
+
+/* ═══════════════ Stage 3 · outline ═══════════════ */
+function currentOutline(){
+  var list=$('pageList');
+  var out=[];
+  list.querySelectorAll('.row-page').forEach(function(row){
+    var t=row.querySelector('[contenteditable]').textContent.trim();
+    var type=row.getAttribute('data-tp'); out.push({t:t, tp:type});
+  });
+  return out;
+}
+function renderOutline(){
+  var list=$('pageList');
+  var pages = state.selFrame && OUTLINES[state.selFrame] ? OUTLINES[state.selFrame] : FRAMES.A.pages;
+  list.innerHTML='';
+  pages.forEach(function(p,i){ list.appendChild(makePageRow(i+1, p)); });
+  outlineStat();
+}
+function makePageRow(idx, title){
+  var tag=slideTag(title);
+  var tpClass = tag==='封面'?'封面':(tag==='ROI'?'ROI':(tag==='数据'?'数据':(tag==='时间线'?'时间线':(tag==='收尾'?'收尾':'正文'))));
+  var row=document.createElement('div');
+  row.className='row-page'; row.setAttribute('data-tp',tpClass);
+  row.innerHTML='<span class="idx">'+idx+'</span>'+
+    '<span class="tp">'+tpClass+'</span>'+
+    '<span contenteditable="true" spellcheck="false">'+esc(title)+'</span>'+
+    '<span class="acts">'+
+      '<button class="mini-btn up" title="上移">↑</button>'+
+      '<button class="mini-btn down" title="下移">↓</button>'+
+      '<button class="mini-btn del" title="删除本页">✕</button>'+
+    '</span>';
+  row.querySelector('[contenteditable]').addEventListener('keydown',function(ev){
+    if(ev.key==='Enter'){ ev.preventDefault(); this.blur(); }
+  });
+  row.querySelector('.up').onclick=function(){
+    if(row.previousElementSibling) { row.parentNode.insertBefore(row,row.previousElementSibling); renum(); outlineStat(); }
+  };
+  row.querySelector('.down').onclick=function(){
+    if(row.nextElementSibling) { row.parentNode.insertBefore(row.nextElementSibling,row); renum(); outlineStat(); }
+  };
+  row.querySelector('.del').onclick=function(){
+    var remain=row.parentNode.querySelectorAll('.row-page').length;
+    if(remain<=3){ toast('至少保留 3 页（封面 + 至少两页正文）。','warntoast'); return; }
+    row.remove(); renum(); outlineStat();
+    toast('已删除一页 —— 大纲由你掌控。');
+  };
+  return row;
+}
+function addPage(kind){
+  var list=$('pageList');
+  var n=list.querySelectorAll('.row-page').length+1;
+  var titles={ '正文页':'（新页）本页要点…', '数据图表页':'（数据页）新增证据图表…', '时间线页':'（时间线）里程碑安排…' };
+  list.appendChild(makePageRow(n,titles[kind]));
+  renum(); outlineStat();
+  toast('已新增「'+kind+'」——点标题可直接改名。');
+}
+function renum(){
+  $('pageList').querySelectorAll('.row-page').forEach(function(r,i){ var id=r.querySelector('.idx'); if(id) id.textContent=i+1; });
+}
+function outlineStat(){
+  var pages=currentOutline();
+  $('ocPages').textContent=pages.length;
+  var dataN=0; pages.forEach(function(p){ if(/数据|实证|ROI|时间线|图表/.test(p.t)) dataN++; });
+  var ratio = pages.length?Math.round(dataN/pages.length*100):0;
+  $('ocMix').textContent = ratio>=40 ? '数据/证据页占 '+dataN+'/'+pages.length+'，匹配“客户看重 ROI”的取向'
+    : '正文/叙事页居多';
+}
+
+/* ═══════════════ Stage 4 · data render ═══════════════ */
+function statTile(k,v,unit,d,st,chip){
+  return '<div class="stat"><div class="k">'+k+'</div><div class="v">'+v+'<span class="unit">'+(unit||'')+'</span></div>'+
+    '<div class="d">'+d+'</div><div style="position:absolute;top:10px;right:10px">'+chip+'</div></div>';
+}
+function chipHTML(st){ return statusChip(st,true); }
+function renderStage4(){
+  var tiles = [
+    statTile('平均净销售额提升','+4.2','%','vs 对照组 · 试点 3 市场 24 周', 'pending', chipHTML('pending')),
+    statTile('关键 SKU 缺货率','7.9 → 6.5','%','试点期相对下降 18%', 'pending', chipHTML('pending')),
+    statTile('预测准确率','64 → 81','%','试点前后对比', 'pending', chipHTML('pending'))
+  ].join('');
+  $('statTiles').innerHTML=tiles;
+  // charts
+  ensureCharts();
+  var pend=remainingCount();
+  $('pendingBannerS4').textContent='⚠ '+pend+' 处关键数字待确认';
+}
+function ensureCharts(){
+  var c1=$('chLift'), c2=$('chStock');
+  if(!c1.querySelector('svg')) c1.insertAdjacentHTML('beforeend', colChartSVG(LIFT,4.2));
+  if(!c2.querySelector('svg')) c2.insertAdjacentHTML('beforeend', lineChartSVG(STOCK));
+}
+function colChartSVG(data, mean){
+  var W=340,H=200,P={l:30,r:10,t:12,b:22};
+  var pw=W-P.l-P.r, ph=H-P.t-P.b;
+  var max=5;
+  var step=1;
+  function y(v){ return P.t+ph-(v/max*ph); }
+  var grid=''; for(var g=0;g<=max;g+=step){ grid+='<line x1="'+P.l+'" y1="'+y(g)+'" x2="'+W-P.r+'" y2="'+y(g)+'" stroke="var(--grid)" stroke-width="1"/>';
+    grid+='<text x="'+(P.l-6)+'" y="'+(y(g)+3)+'" text-anchor="end" font-size="9" fill="#98a3b8">'+g+'%</text>'; }
+  var n=data.length, slot=pw/n, bw=Math.min(46,slot*0.5);
+  var bars=''; data.forEach(function(d,i){
+    var cx=P.l+slot*i+slot/2;
+    bars+='<rect x="'+(cx-bw/2)+'" y="'+y(d.v)+'" width="'+bw+'" height="'+(y(0)-y(d.v))+'" rx="4" fill="var(--ser-blue)" role="img" aria-label="'+esc(d.label)+' '+d.v+'%"/>';
+    bars+='<text x="'+cx+'" y="'+(y(d.v)-6)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#1f2a44">+'+d.v+'%</text>';
+    bars+='<text x="'+cx+'" y="'+(H-P.b+13)+'" text-anchor="middle" font-size="10" fill="#5d6b84">'+esc(d.label)+'</text>';
+  });
+  var meanLine='';
+  if(mean!==undefined&&mean!==null&&mean!==0){
+    var my=y(mean);
+    meanLine='<line x1="'+P.l+'" y1="'+my+'" x2="'+(W-P.r)+'" y2="'+my+'" stroke="#a78b1f" stroke-width="1.3" stroke-dasharray="5 4"/>'+
+      '<text x="'+(W-P.r-4)+'" y="'+(my-4)+'" text-anchor="end" font-size="9.5" fill="#8a6d14" font-weight="600">3 市场均值 +4.2%</text>';
+  }
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="各市场试点净销售提升柱状图" style="margin-top:8px">'+
+    '<title>各市场试点净销售提升柱状图</title>'+grid+bars+meanLine+'</svg>';
+}
+function lineChartSVG(pts){
+  var W=340,H=190,P={l:30,r:12,t:12,b:22};
+  var pw=W-P.l-P.r, ph=H-P.t-P.b;
+  var min=6.0,max=8.2, span=max-min;
+  function x(i){ return P.l+(pts.length===1?pw/2:pw*(i/(pts.length-1))); }
+  function y(v){ return P.t+ph-((v-min)/span*ph); }
+  var grid=''; for(var gi=0;gi<=4;gi++){ var vv=max-(max-min)*gi/4;
+    grid+='<line x1="'+P.l+'" y1="'+y(vv)+'" x2="'+W-P.r+'" y2="'+y(vv)+'" stroke="var(--grid)" stroke-width="1"/>';
+    grid+='<text x="'+(P.l-6)+'" y="'+(y(vv)+3)+'" text-anchor="end" font-size="9" fill="#98a3b8">'+vv.toFixed(1)+'%</text>'; }
+  var d=''; pts.forEach(function(p,i){ d+=(i?'L':'M')+x(i).toFixed(1)+' '+y(p.v).toFixed(1); });
+  var circ=''; pts.forEach(function(p,i){ circ+='<circle cx="'+x(i).toFixed(1)+'" cy="'+y(p.v).toFixed(1)+'" r="3" fill="#fff" stroke="var(--ser-blue)" stroke-width="2"/>'; });
+  var labx=''; pts.forEach(function(p,i){ labx+='<text x="'+x(i)+'" y="'+(H-P.b+13)+'" text-anchor="middle" font-size="9.5" fill="#5d6b84">'+esc(p.label)+'</text>'; });
+  var dir=pts.length-1;
+  var labels='';
+  labels+='<text x="'+(x(0)+2)+'" y="'+(y(pts[0].v)-6)+'" font-size="10" font-weight="700" fill="#1f2a44">7.9%</text>';
+  labels+='<text x="'+(x(dir)-2)+'" y="'+(y(pts[dir].v)-6)+'" text-anchor="end" font-size="10" font-weight="700" fill="#1f2a44">6.5%</text>';
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="关键 SKU 缺货率折线图" style="margin-top:8px">'+
+    '<title>关键 SKU 缺货率 24 周走势折线图</title>'+grid+
+    '<path d="'+d+'" fill="none" stroke="var(--ser-blue)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>'+
+    circ+labx+labels+'</svg>';
+}
+
+/* ═══════════════ Stage 5 · facts (trust core) ═══════════════ */
+function remainingCount(){
+  var n=0;
+  FACTS.forEach(function(g){ g.rows.forEach(function(r){
+    var st=factState[r.id];
+    if(st==='pending'||st==='nosource') n++;
+    if(st==='derived'){ n++; }
+  });});
+  return n;
+}
+function allConfirmed(){
+  var n=0;
+  FACTS.forEach(function(g){ g.rows.forEach(function(r){
+    var st=factState[r.id];
+    if(st!=='confirmed' && st!=='trusted') n++;
+  });});
+  return n===0;
+}
+function resolvedOf(id){ var st=factState[id]; return st==='confirmed'||st==='trusted'; }
+
+function renderFacts(){
+  var wrap=$('factList');
+  var h='';
+  FACTS.forEach(function(g,gi){
+    h+='<div class="grp-lbl"><span>'+g.gicon+'</span>'+esc(g.g)+'<span class="ln"></span></div>';
+    g.rows.forEach(function(r){ h+=factRow(r); });
+  });
+  wrap.innerHTML=h;
+  updateGuard();
+}
+
+function factRow(r){
+  var st=factState[r.id];
+  var done = st==='confirmed';
+  var cls = done?'done':(st==='nosource'?'danger':'');
+  var parentResolved2 = r.status==='derived' ? resolvedOf(r.parent) : false;
+  var val = (r.status==='derived' && !parentResolved2) ? '—' : (factValMap[r.id]||'');
+  var chip='';
+  if(st==='confirmed'){ chip = statusChip('confirmed',true); }
+  else if(r.status==='derived'){
+    var parentResolved = resolvedOf(r.parent);
+    chip = parentResolved ? statusChip('derived',true) : statusChip('derivedLock',true);
+  } else { chip = statusChip(st,true); }
+  var mark = done ? '<span class="checkdot">✓</span>' : '';
+  var text = r.txt;
+  // For f5 resolved-by-range variant
+  var src = factSrcText[r.id];
+  var actions='';
+  if(st==='pending'||st==='trusted'){
+    actions='<button class="btn" style="padding:6px 14px;font-size:13px" data-act="confirm" data-id="'+r.id+'">'+
+      (st==='trusted'?'我已复核此基准，采纳 ✓':'我已核实，以此为口径 ✓')+'</button>';
+  }
+  if(st==='nosource'){
+    actions='<button class="btn" style="padding:6px 14px;font-size:13px;background:#fff;color:var(--bad);border:1px solid var(--bad-line)" data-act="attach" data-id="'+r.id+'">📎 补充出处文件</button>'+
+      '<button class="btn" style="padding:6px 14px;font-size:13px" data-act="rewrite" data-id="'+r.id+'">✏️ 改为审慎区间表述</button>';
+  }
+  if(r.status==='derived'){
+    var parentResolved = resolvedOf(r.parent);
+    if(parentResolved){
+      actions='<button class="btn" style="padding:6px 14px;font-size:13px" data-act="confirm" data-id="'+r.id+'">采用此口径 ✓</button>'+
+        '<span class="tiny faint">口径随上游自动重算</span>';
+    } else {
+      actions='<span class="tiny" style="color:var(--warn)">🔒 上游第 '+r.parent.slice(1)+' 项仍无来源，本项随其锁定 —— 先处理上游。</span>';
+    }
+  }
+  return '<div class="fact '+cls+'" id="'+r.id+'row">'+
+    '<span class="lead-ic" style="background:'+(done?'var(--ok-bg)':'var(--brand-soft)')+'">'+(done?'✓':'ℹ')+'</span>'+
+    '<div class="ft">'+
+      '<div class="tt">'+mark+'<span style="vertical-align:middle">'+esc(text)+'　<span class="val">'+esc(val)+'</span></span></div>'+
+      '<div class="src">📁 '+esc(src)+'</div>'+
+      '<div class="do">'+actions+'</div>'+
+    '</div>'+
+    '<span style="flex:none">'+chip+'</span>'+
+  '</div>';
+}
+
+$('factList').addEventListener('click',function(e){
+  var btn=e.target.closest('[data-act]'); if(!btn||busy) return;
+  var id=btn.getAttribute('data-id'), act=btn.getAttribute('data-act');
+  if(act==='confirm'){ doConfirm(id); }
+  else if(act==='attach'){ doAttach(id); }
+  else if(act==='rewrite'){ doRewrite(id); }
+});
+function doConfirm(id){
+  factState[id]='confirmed';
+  // renumber? no. update derived depending: if id==='f5', mark factValMap f6 via recompute
+  recomputeDerived();
+  var row=$(id+'row'); if(row){ row.style.transition='.3s'; }
+  renderFacts();
+  var name=factValMap[id];
+  toast('已确认：「'+name.replace(/→/g,' → ')+'」按此口径定稿。','oktoast');
+  if(allConfirmed()){ setTimeout(function(){ toast('🎉 全部确认 —— 信任闸门已打开，可进入成稿预览。','oktoast'); },400); }
+}
+function doAttach(id){
+  factSrcText[id]='📎 已附：roi_consultant_estimate_v2.xlsx（顾问测算表，可作为出处锚点）——点击下方“确认”即采信';
+  factState[id]='pending';
+  renderFacts();
+  toast('已模拟附加出处文件（roi_consultant_estimate_v2.xlsx）。请再点一次确认采信。');
+}
+function doRewrite(id){
+  factValMap['f5']='€1.2M – €2.0M / 年（区间）';
+  factValMap['f6']='5.1 – 8.5 个月';
+  factSrcText['f5']='区间由试点结果 × 客户规模外推，低端不含协同效应；建议启动会前与客户共同校准口径';
+  factState['f5']='pending';
+  recomputeDerived();
+  renderFacts();
+  toast('已把外推值改写为审慎区间表述——更经得起追问。请确认这一口径。','oktoast');
+}
+function recomputeDerived(){
+  // 派生指标只反映上游最终采纳的表述：区间化 → 区间回本；保留精确外推 → 单点回本
+  if(factState['f5']==='confirmed'){
+    var v5=factValMap['f5']||'';
+    factValMap['f6'] = (v5.indexOf('区间')>=0 || v5.indexOf('–')>=0)
+      ? '5.1 – 8.5 个月' : '约 5.7 个月';
+    if(factState['f6']!=='confirmed') factState['f6']='derived';
+  }
+  // 上游未定：f6 的“锁定”状态由渲染逻辑依据 resolvedOf('f5') 呈现，数值先不写死
+}
+
+function updateGuard(){
+  var rem=remainingCount(), tot=7, done=tot-rem;
+  $('guardN').textContent=rem;
+  $('ringFg').style.strokeDashoffset=352-(352*done/tot);
+  if(rem===0){ $('ringFg').style.stroke='#16a34a'; }
+  else { $('ringFg').style.stroke='#2f4ed7'; }
+  var accel=$('factAccel'); accel.classList.toggle('hidden', rem===0);
+  $('guardOk').classList.toggle('hidden', rem>0);
+  $('guardMsg').classList.toggle('hidden', rem===0);
+  $('guardTxt').textContent = rem>0
+    ? (rem+' 项仍未确认 —— “定稿 / 导出 / 已确认版本”均被锁定。逐项处理或将外推值改写为审慎表述。')
+    : '';
+  updateNav();
+}
+function markAllConfirmed(){
+  // 先把“无来源”的外推值按产品建议路径改写为审慎区间，再整体确认，保持最终状态合理
+  factValMap['f5']='€1.2M – €2.0M / 年（区间）';
+  factValMap['f6']='5.1 – 8.5 个月';
+  factSrcText['f5']='区间由试点结果 × 客户规模外推，低端不含协同效应；建议启动会前与客户共同校准口径';
+  FACTS.forEach(function(g){ g.rows.forEach(function(r){ factState[r.id]='confirmed'; }); });
+  recomputeDerived();
+  renderFacts();
+  toast('（演示加速）已将无来源项改写为审慎区间并全部标记为已核实。','oktoast');
+}
+
+/* ═══════════════ Stage 6 · preview ═══════════════ */
+var SLIDES=[
+  {no:1, name:"封面", run:"intr", body:function(){return coverSlide();}},
+  {no:2, name:"客户环境与挑战", run:"intro", body:function(){return slide2();}},
+  {no:3, name:"试点实证（数据页）", run:"data", body:function(){return slide3();}},
+  {no:4, name:"规模化价值与 ROI", run:"roi", body:function(){return slide4();}},
+  {no:5, name:"实施时间线与下一步", run:"time", body:function(){return slide5();}}
+];
+function renderThumbs(){
+  var h=''; SLIDES.forEach(function(s,i){
+    h+='<button class="thumb'+(i===state.pvCur?' cur':'')+'" onclick="pvGo('+i+')"><span class="no">'+s.no+'</span><span>'+esc(s.name)+'</span></button>';
+  });
+  $('thumbs').innerHTML=h;
+}
+function pvGo(i){ state.pvCur=i; renderThumbs(); renderSlide(); }
+function pvNav(d){ pvGo((state.pvCur+d+SLIDES.length)%SLIDES.length); }
+function slideFrame(html, no, tag){
+  return '<div class="slide">'+
+    '<div class="sband"><span class="tagProto">原型示意页 '+no+'/'+SLIDES.length+'（完整稿共 8 页）</span></div>'+
+    '<div style="flex:1;display:flex;flex-direction:column">'+html+'</div>'+
+    '<div class="conf-seal">🛡 已确认 · 可放心交付</div>'+
+    '<div class="smark">Meridian Analytics · Confidential — DeckSure · 生成+确认</div>'+
+  '</div>';
+}
+function miniCheck(txt){ return '<span class="tiny" style="color:var(--ok);font-weight:600;display:inline-flex;gap:4px;align-items:center">✓ '+esc(txt)+'</span>'; }
+/* 把“已确认口径”转成页面上干净的展示值 */
+function dispV(id){
+  var s=factValMap[id]||'';
+  s=s.replace('（待上游确认）','').replace(/^≈\s*/,'').replace(/\s*\/\s*年.*$/,'').trim();
+  return s;
+}
+function renderSlide(){
+  var s=SLIDES[state.pvCur];
+  $('slideMount').innerHTML = slideFrame(s.body(), s.no, s.run);
+}
+/* slide content builders */
+function coverSlide(){
+  return '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:6px 10px">'+
+    '<div class="sl-eyebrow">Business Value Proposal · 机密 · 供 Volante 内部评审</div>'+
+    '<div class="sl-title" style="font-size:34px;max-width:560px">让需求预测更准，<br>让缺货更少，<br>让销售额回到货架</div>'+
+    '<div class="sl-sub" style="max-width:560px">Meridian Demand Intelligence 为 Volante Retail Group 规模化释放库存与销售价值</div>'+
+    '<div style="display:flex;gap:22px;margin-top:22px;color:var(--muted);font-size:12px;flex-wrap:wrap">'+
+      '<span><b style="color:var(--ink)">提案方</b><br>Meridian Analytics · Sasha Hoffmann（售前顾问）</span>'+
+      '<span><b style="color:var(--ink)">面向</b><br>Volante Retail Group · 品类与供应链领导层</span>'+
+      '<span><b style="color:var(--ink)">时长</b><br>30 分钟 · 含现场答疑</span>'+
+      '<span><b style="color:var(--ink)">日期</b><br>2026-09-09</span>'+
+    '</div></div>';
+}
+function statLine(k,v,note){
+  return '<div class="stat" style="padding:12px"><div class="k">'+esc(k)+'</div><div class="v" style="font-size:20px">'+v+'</div><div class="d">'+esc(note)+'</div></div>';
+}
+function slide2(){
+  var tiles = statLine("运营网络","24 国",'欧洲多国，需求预测为分区经验外推')+
+    statLine("门店 / 年营收","2,100 / €38B","约 2,100 家门店 · 年营收约 €38B")+
+    statLine("预测准确率 · 行业","平均 68% / 最佳 85%",'Aberdeen Research 2024 · 第三方基准已校验 ✓');
+  return '<div class="sl-eyebrow">01 · 客户环境与当下挑战</div>'+
+    '<div class="sl-title" style="font-size:23px">每个“没货可卖”的时刻，都在悄悄流失销售额与口碑</div>'+
+    '<div class="stats" style="grid-template-columns:repeat(3,1fr);margin-top:6px">'+tiles+'</div>'+
+    '<ul style="margin:8px 0 0 18px;font-size:13px;color:var(--muted);line-height:1.9">'+
+      '<li>预测基于历史基线外推、补货依赖分区经验——畅销与滞销 SKU 之间资源错配</li>'+
+      '<li>据销售纪要，集团已将“库存效率”列入本财年供应链优先项'+miniCheck('客户侧事实已确认 · 来源 sales_call_notes')+'</li>'+
+    '</ul></div>';
+}
+function slide3(){
+  return '<div class="sl-eyebrow">03 · 试点实证 · DACH 3 市场 · 24 周</div>'+
+    '<div class="sl-title" style="font-size:23px">试点：销售额起来了，缺货降下去了，预测准了</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px">'+
+      '<div><div class="small" style="font-weight:700;margin-bottom:2px">试点净销售提升 vs 对照组</div><div class="chartwrap" style="padding:6px;border:none;background:transparent">'+colChartSVG(LIFT,4.2)+'</div>'+
+        '<span style="display:block;margin-top:-2px">'+miniCheck('+4.2% 均值 · 试点数据已确认')+'</span></div>'+
+      '<div><div class="small" style="font-weight:700;margin-bottom:2px">关键 SKU 缺货率 · 24 周走势</div><div class="chartwrap" style="padding:6px;border:none;background:transparent">'+lineChartSVG(STOCK)+'</div>'+
+        '<span style="display:block;margin-top:-2px">'+miniCheck('7.9% → 6.5%（相对 −18%）已确认')+'</span></div>'+
+    '</div>'+
+    '<div style="margin-top:6px;font-size:12.5px;color:var(--muted)">试点口径：DE/AT/CH × 260 SKU × 24 周，与同期对照组归一化后比较。'+miniCheck('预测准确率 64% → 81% 已确认')+'</div>';
+}
+function slide4(){
+  var f5=dispV('f5'), f6=dispV('f6');
+  var isRange = (factValMap['f5']||'').indexOf('–')>=0;
+  var cap = isRange ? '口径已确认：区间化表述 · 无 AI 裸外推数字'
+                    : '口径已确认：外推数字已补充出处文件（顾问测算表）';
+  return '<div class="sl-eyebrow">05 · 规模化价值与 ROI</div>'+
+    '<div class="sl-title" style="font-size:23px">从试点到全国：一年净库存收益，远大于一次试点的投入</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px">'+
+      '<div style="display:flex;flex-direction:column;gap:9px">'+
+        statLine('规模化年化成本节省', esc(f5)||'—', isRange?'审慎区间（试点外推 · 低端不含协同）':'经顾问测算表佐证（试点外推）')+
+        statLine('首期实施投入','≈ €850K','3 市场扩展试点 + 集成')+
+        statLine('静态回本周期', esc(f6)||'—','由“成本节省 ÷ 实施投入”自动推导')+
+      '</div>'+
+      '<div class="chartwrap" style="align-self:center">'+
+        '<div class="small" style="font-weight:700;margin-bottom:8px">回本示意（8 个月窗口）</div>'+
+        '<div style="height:14px;border-radius:99px;background:var(--line);position:relative;overflow:hidden;margin-bottom:6px"><div style="width:74%;height:100%;background:linear-gradient(90deg,#2f4ed7,#6a7ff0);border-radius:99px"></div>'+
+        '<div style="position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;background:#fff"></div><div style="position:absolute;left:50%;top:-15px;font-size:9px;color:var(--faint)">月 4</div></div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint)"><span>投入 ≈ €850K</span><span style="color:var(--brand);font-weight:700">回本点（依已确认口径）起累计回正</span></div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="margin-top:8px">'+miniCheck(cap)+'</div>';
+}
+function slide5(){
+  return '<div class="sl-eyebrow">06 · 实施路径与下一步</div>'+
+    '<div class="sl-title" style="font-size:23px">先小步验证，再全国铺开——风险可控的合作节奏</div>'+
+    '<div style="margin:14px 0 2px"><div class="tl">'+
+      tlNode("第 1–2 周","数据接入",'接通 Volante 3 市场历史数据与系统')+
+      tlNode("第 3–8 周","联合试点",'预测模型 + 补货流程联合调优')+
+      tlNode("第 9–10 周","口径复盘",'共同校验 ROI 口径，双方签字确认')+
+      tlNode("第 11 周起","全国铺开",'按确认口径分批扩展至 24 国')+
+    '</div></div>'+
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:14px">'+
+      '<div class="card" style="padding:12px;box-shadow:none"><b style="font-size:13px">我方承诺的验收口径</b><div style="font-size:12px;color:var(--muted);margin-top:4px">若扩展试点后未达到约定的准确率 / 缺货降幅基线，我方承担联合调优成本。</div></div>'+
+      '<div class="card" style="padding:12px;box-shadow:none"><b style="font-size:13px">下一步：建议动作</b><div style="font-size:12px;color:var(--muted);margin-top:4px">一周内安排 ROI 口径校准工作坊；确定试点门店清单与数据接口负责人。</div></div>'+
+    '</div>'+
+    '<div style="margin-top:8px">'+miniCheck('时间线为建议排期 · 页面口径全部确认')+'</div>';
+}
+function tlNode(p,t,d){
+  return '<div class="node"><div class="p">✓</div><div class="pt">'+esc(p)+'</div><div class="lb">'+esc(t)+'<div class="tiny faint" style="font-weight:400">'+esc(d)+'</div></div></div>'+
+    '<div class="line"></div>';
+}
+
+/* ═══════════════ Stage 7 · trust report ═══════════════ */
+function renderTrustReport(){
+  var h='';
+  FACTS.forEach(function(g){ g.rows.forEach(function(r){
+    var st=factState[r.id];
+    var ok = st==='confirmed'||st==='trusted';
+    if(!ok) return;
+    h+='<div style="display:flex;gap:9px;align-items:flex-start;background:'+(st==='trusted'?'var(--brand-faint)':'#fff')+';border:1px solid var(--line);border-radius:9px;padding:8px 11px">'+
+      '<span class="checkdot">✓</span>'+
+      '<div style="font-size:12.5px;flex:1"><b>'+esc(factValMap[r.id])+'</b> — '+esc(r.txt)+
+      '<div class="tiny faint" style="margin-top:2px">来源：'+esc(factSrcText[r.id])+(st==='trusted'?' · 第三方基准已校验':'')+' · 确认人：Sasha · '+todayStr()+'</div></div></div>';
+  });});
+  $('trustReport').innerHTML=h;
+}
+function todayStr(){ var d=new Date(); return d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate()); }
+function pad(n){return n<10?'0'+n:''+n;}
+
+/* ═══════════════ style injections for dynamic elems ═══════════════ */
+document.head.insertAdjacentHTML('beforeend',
+'<style>.lang{background:#fff;border:1px solid var(--line);color:var(--muted);padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;}\n'+
+'.lang:hover{border-color:#b9c3e6;}\n.lang.on{background:var(--brand);border-color:var(--brand);color:#fff;}\n'+
+'.miniBtnStyle{margin:0;}</style>');
+
+/* ═══════════════ boot ═══════════════ */
+refreshStepper();
+$('langWrap').querySelectorAll('.lang').forEach(function(b){
+  b.classList.toggle('on', b.getAttribute('data-lang')==='中文');
+});
+go(0);
+</script>
+</body>
+</html>

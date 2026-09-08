@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeckSure · 「可放心用于正式场合」创作体验验证方案</title>
+<style>
+  :root{
+    --ink:#152033;
+    --ink2:#3a4a63;
+    --muted:#5c6b80;
+    --brand:#2f4ed7;
+    --brand-soft:#edf1fc;
+    --line:#e3e8f2;
+    --bg:#f5f6fa;
+    --card:#ffffff;
+    --chk:#0d7a4a; --chk-bg:#e6f4ec;
+    --rd:#9a5b00;  --rd-bg:#fdf3e0;
+    --crit:#b3261e;
+    --serious:#d03b3b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.68;font-size:14px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1020px;margin:0 auto;padding:0 20px 90px;}
+  /* topbar */
+  .topbar{position:sticky;top:0;z-index:50;background:rgba(245,246,250,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);}
+  .topbar .in{max-width:1020px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .brand{font-weight:800;font-size:15px;color:var(--ink);}
+  .brand em{color:var(--brand);font-style:normal;}
+  .brand small{font-weight:500;color:var(--muted);font-size:12.5px;margin-left:6px;}
+  .toc{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;}
+  .toc a{font-size:12px;color:var(--muted);text-decoration:none;padding:3px 8px;border-radius:6px;border:1px solid transparent;}
+  .toc a:hover{color:var(--brand);border-color:var(--line);background:#fff;}
+  /* header */
+  .hero{padding:30px 4px 6px;}
+  .eyebrow{display:inline-block;background:var(--brand-soft);color:var(--brand);font-size:12px;font-weight:700;
+    padding:4px 12px;border-radius:999px;letter-spacing:.5px;}
+  h1{font-size:26px;line-height:1.3;margin:14px 0 10px;font-weight:800;max-width:900px;}
+  .lede{color:var(--muted);max-width:900px;}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .pill{font-size:12px;color:var(--ink2);background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 11px;}
+  /* sections */
+  section{padding:30px 0 6px;border-top:1px solid var(--line);margin-top:26px;}
+  .kicker{color:var(--brand);font-size:12px;font-weight:800;letter-spacing:1.4px;}
+  h2{font-size:20px;margin:6px 0 4px;font-weight:800;}
+  h2 .cn{color:var(--muted);font-weight:600;font-size:13px;margin-left:8px;}
+  h3{font-size:15.5px;margin:22px 0 8px;font-weight:800;color:var(--ink);}
+  h3 .tag{font-weight:600;font-size:11px;vertical-align:middle;}
+  p{margin:6px 0;}
+  .muted{color:var(--muted);}
+  ul,ol{margin:6px 0 6px 2px;padding-left:20px;}
+  li{margin:3px 0;}
+  /* cards & layouts */
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+  .card h4{font-size:13.5px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+  .card p,.card li{color:var(--ink2);font-size:13.5px;}
+  .goalbar{display:flex;gap:0;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
+  /* tables */
+  .tbl-wrap{overflow-x:auto;margin:10px 0;border:1px solid var(--line);border-radius:10px;background:#fff;}
+  table{border-collapse:collapse;width:100%;font-size:13px;min-width:760px;}
+  th,td{border-bottom:1px solid var(--line);padding:7px 9px;vertical-align:top;text-align:left;}
+  th{background:var(--brand-soft);font-weight:700;font-size:12.5px;color:var(--ink);white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td .n{font-weight:800;color:var(--brand);}
+  td .w{font-variant-numeric:tabular-nums;}
+  .dim-t{font-weight:700;white-space:nowrap;}
+  .row-total td{background:#f3f6ff;font-weight:800;}
+  /* rubric score cells */
+  .sc{font-size:12px;color:var(--ink2);}
+  .sc b{display:block;font-size:12px;}
+  /* chips */
+  .chip{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap;}
+  .chk{color:var(--chk);background:var(--chk-bg);}
+  .rd{color:var(--rd);background:var(--rd-bg);}
+  .line{color:#fff;background:var(--serious);}
+  .hw{color:var(--crit);background:#fbe9e9;}
+  /* viz */
+  .viz{border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px 18px 12px;margin:10px 0;}
+  .viz .t{font-size:13px;font-weight:800;margin-bottom:4px;}
+  .viz .sub{font-size:12px;color:var(--muted);margin-bottom:12px;}
+  .wrow{display:grid;grid-template-columns:150px 1fr 44px;align-items:center;gap:10px;margin:7px 0;}
+  .wlabel{font-size:12.5px;color:var(--ink2);line-height:1.3;}
+  .wlabel b{display:block;color:var(--ink);font-size:12.5px;}
+  .track{background:var(--bg);height:18px;border-radius:4px;position:relative;}
+  .bar{height:18px;border-radius:4px;}
+  .wval{font-size:12.5px;font-variant-numeric:tabular-nums;font-weight:700;text-align:right;}
+  .axis{position:relative;height:14px;margin-top:6px;font-size:10.5px;color:var(--muted);}
+  .axis span{position:absolute;transform:translateX(-50%);}
+  /* flow */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;}
+  .fnode{flex:1;min-width:180px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:4px;position:relative;}
+  .fnode b{display:block;font-size:13px;margin-bottom:3px;}
+  .fnode .step{font-size:10.5px;font-weight:800;color:var(--brand);letter-spacing:.5px;}
+  .fnode ul{font-size:12px;color:var(--ink2);padding-left:14px;margin:4px 0 0;}
+  .fnode .gate{margin-top:6px;font-size:11.5px;font-weight:700;color:var(--crit);}
+  /* checklist */
+  .ck li{list-style:none;margin:5px 0;padding-left:0;font-size:13px;}
+  .ck li::before{content:"\2610";color:var(--brand);margin-right:8px;font-weight:700;}
+  .kbd{font-size:12px;background:var(--brand-soft);color:var(--brand);border-radius:5px;padding:1px 6px;font-weight:700;white-space:nowrap;}
+  .note{font-size:12px;color:var(--muted);border-left:3px solid var(--line);padding:2px 0 2px 10px;margin:8px 0;}
+  strong.hl{color:var(--crit);}
+  .numtag{display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center;background:var(--brand);
+    color:#fff;border-radius:6px;font-weight:800;font-size:12.5px;margin-right:6px;}
+  @media(max-width:640px){
+    h1{font-size:21px;} .wrow{grid-template-columns:1fr;gap:3px;} .wval{text-align:left;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="in">
+  <div class="brand">Deck<em>Sure</em><small>验证方案 · V1.0</small></div>
+  <nav class="toc">
+    <a href="#sys">一·评测体系</a><a href="#bench">二·基准集</a><a href="#method">三·评测分工</a>
+    <a href="#metrics">四·关键指标</a><a href="#tradeoff">五·取舍与门槛</a><a href="#appendix">附录</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">内部评审用 · 系统化验证方案</span>
+    <h1>「让用户放心把 AI 文稿用于正式场合」—— 创作体验验证方案</h1>
+    <p class="lede">被测对象：<strong>DeckSure</strong>「想法 → 成稿 → 用户逐项确认 → 定稿上会」整条创作体验。本方案与用户定位页同源：核心命题不是「生成得快」，而是「<strong>生成+确认</strong>之后，用户敢不敢直接拿去正式场合，现场被问住也不会出丑」。</p>
+    <div class="meta">
+      <span class="pill">统一场景：售前顾问 Sasha · 面向跨国零售集团的 30 分钟商业价值汇报</span>
+      <span class="pill">判定对象：可放心度</span>
+      <span class="pill">主线：对外正式汇报（英文）</span>
+      <span class="pill">最大待验证模块：事实与数据校验引擎</span>
+    </div>
+  </header>
+
+  <!-- ============ 顶层逻辑 ============ -->
+  <section id="overview">
+    <div class="kicker">总览 · 怎么组织这份方案</div>
+    <h2>判定逻辑一句话<span class="cn">看懂的入口</span></h2>
+    <p>「可放心用于正式场合」无法由单一内部指标推出，因此按<strong>三件套</strong>组织：<strong>① 评测体系</strong>（分<em>端到端</em>与<em>子能力</em>两层，各给目标、通过线与 rubrics）；<strong>② Benchmark 基准集</strong>（黄金集 + 对抗扩展集）；<strong>③ 评测方式与分工</strong>（机器/规则 → LLM judge → 人工三层，管不同的事）。最后用<strong>四类信任关键指标</strong>（事实正确性、自检成本、恢复成本、愿直接使用比例/信心）把「放心」翻译成可测的量。</p>
+    <div class="note">放行的总原则：<strong>加权平均永远不作为放行依据</strong>——若某一关键维度（如事实正确性）触红线，哪怕整体分数高也整稿不通过。加权分只用于横向诊断与回归排序（详见 <a href="#sys-compose">§一.3 合成规则</a>）。</div>
+
+    <h3>两层评测体系 × 三类评测方式 = 一张分工矩阵</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="min-width:110px;">评测方式</th><th>端到端层（整条体验）</th><th>子能力层（可分离能力）</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="dim-t">代码 / 规则自动</td>
+          <td>硬门槛扫描：编造=0、待确认清零率、口径一致、数据同源同值；故障注入计时（自检/恢复成本）。<span class="note" style="margin:2px 0;">成本 ≈ 秒级，逐稿全量跑。</span></td>
+          <td>事实/数据正确性的<b>可检查部分</b>：值与源比对、无源项检出、单位/币种/汇率、合计与四舍五入、引用错标、格式完整性。</td></tr>
+        <tr><td class="dim-t">LLM judge</td>
+          <td>「客户视角初筛」：通读全稿判断是否有会被当场问住/打脸的论证漏洞，产出候选追问点。</td>
+          <td>结构逻辑、图表与论点匹配、语言地道度、确认流自然度——需要语义判断、但可标准化复用的项。</td></tr>
+        <tr><td class="dim-t">人工评测</td>
+          <td><strong>最终放行裁判</strong>：愿不愿意直接上会、像不像敢拿给真客户的稿子、职业信任感、现场抗问演练。</td>
+          <td>确认流「是否打断思路」等主观负担、口径注释「客户能否看懂」。</td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted">分工互补一句话：<strong>机器管「可检查的事」，judge 管「质量与风险」，人工管「信任与主观」</strong>。前两者便宜可回归，负责把不达标的稿子拦在上会前；人工频次低、成本高，做最终放行——因为「敢不敢上会」本质是用户的主观决定，机器与 judge 只能逼近、不能替代。</p>
+  </section>
+
+  <!-- ============ 一 评测体系 ============ -->
+  <section id="sys">
+    <div class="kicker">一 · 评测体系</div>
+    <h2>两层：端到端评测 与 子能力评测<span class="cn">每层都要回答：测什么目标、什么样算通过</span></h2>
+
+    <!-- 子能力层 -->
+    <h3 id="sys-cap">1.1 子能力层评测</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4>评测目标</h4>
+        <p>把创作体验拆成可独立验收、可归因的能力。某一页结构差、某数字错、某确认提示扰人，若能落到具体能力上，修复就能落到具体模块上。子能力分是<strong>诊断与回归</strong>信号，不做最终放行。</p>
+      </div>
+      <div class="card">
+        <h4>通过线（本层）</h4>
+        <p>黄金集均分达标 = 无单项能力掉链子：事实/数据 ≥ 4.0 且无任务 ≤ 2；确认流 ≥ 3.5 且无任务 ≤ 2（安全相关不设容忍）；结构 ≥ 3.5、图表排版 ≥ 3.5、多语言 ≥ 3.5（EN）/ ≥ 3.0（JA/KO 抽测不阻断主线）。子能力分不直接放行，但任一能力连续不达标会阻断对应模块迭代转正。</p>
+      </div>
+    </div>
+
+    <p>权重与 1–5 档评分细则（加总 = <strong>100%</strong>）。各档均为「可观察行为」描述，评分为任务级（由评测员对每份成稿打分）。</p>
+
+    <div class="viz">
+      <div class="t">子能力层权重分配（加总 100%）</div>
+      <div class="sub">条长按权重等比（每 1% = 满宽 1%）；权重分配理由：本产品差异化在于「事实/数据 + 确认」，故这两者合计 55%。</div>
+      <div class="wrow"><div class="wlabel"><b>事实与数据正确性</b>核心命题</div><div class="track"><div class="bar" style="width:30%;background:#2a78d6;"></div></div><div class="wval">30%</div></div>
+      <div class="wrow"><div class="wlabel"><b>人机协作 / 确认流</b>生成+确认的 UX</div><div class="track"><div class="bar" style="width:25%;background:#eb6834;"></div></div><div class="wval">25%</div></div>
+      <div class="wrow"><div class="wlabel"><b>结构合理性</b>论证与叙事</div><div class="track"><div class="bar" style="width:20%;background:#1baf7a;"></div></div><div class="wval">20%</div></div>
+      <div class="wrow"><div class="wlabel"><b>图表与排版质量</b></div><div class="track"><div class="bar" style="width:15%;background:#eda100;"></div></div><div class="wval">15%</div></div>
+      <div class="wrow"><div class="wlabel"><b>多语言表达</b>EN 为主、JA/KO 抽测</div><div class="track"><div class="bar" style="width:10%;background:#e87ba4;"></div></div><div class="wval">10%</div></div>
+      <div class="axis"><span style="left:0;">0%</span><span style="left:10%;">10</span><span style="left:20%;">20</span><span style="left:30%;">30</span><span style="left:50%;">50</span><span style="left:75%;">75</span><span style="left:100%;">100</span></div>
+      <p class="muted" style="font-size:12px;">评分细则（1–5 档，任务级）：</p>
+    </div>
+
+    <div class="tbl-wrap"><table>
+      <thead><tr><th style="width:190px;">维度（权重）</th><th style="width:17%;">5 · 可直接上会</th><th style="width:17%;">4 · 微调即可</th><th style="width:17%;">3 · 需少量补/改</th><th style="width:17%;">2 · 需较大返工</th><th style="width:17%;">1 · 需重建</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="dim-t">结构合理性（20%）<span class="muted"><br>论证链完整、结论先行、客户视角分节、30 分钟讲得完</span></td>
+          <td class="sc">结论先行、按「痛点→量级→方案→ROI→下一步」客户视角递进、每节可自然收口；评测员按原顺序可无障碍照讲。</td>
+          <td class="sc">结构完整，仅 1–2 处节次衔接/详略需口头微调，逻辑可完整追溯。</td>
+          <td class="sc">缺 1 个关键论证环节（如无 ROI 收口、未处理明显反对意见）或素材顺序机械，需用户补一小节。</td>
+          <td class="sc">结构松散/重复/跳脱，关键主张缺支撑，需重构大纲后才能补讲。</td>
+          <td class="sc">看不出面向客户的论证意图，只能重写。</td>
+        </tr>
+        <tr>
+          <td class="dim-t">事实与数据正确性（30%）<span class="muted"><br>值与源一致、无编造、口径/单位/汇率/合计无误</span></td>
+          <td class="sc">全部有源数据与输入逐一相同；口径（范围/基准日/单位/含税与否）标注清晰无误；无编造、无未清待确认。</td>
+          <td class="sc">值与源一致；仅 1 处口径可写得更明确，属表达问题不属错误。</td>
+          <td class="sc">存在 1 处值不一致（如改数未联动）或 1 个无源数字未被标注；但用户自检能当场发现（成本轻度增加）。</td>
+          <td class="sc">定稿中出现 1 处「编造」或口径性错误（指错对象/单位/汇率），需更正且可能连带他页。</td>
+          <td class="sc">多处编造或与输入大面积不符，成稿整体不可信。</td>
+        </tr>
+        <tr>
+          <td class="dim-t">图表与排版质量（15%）<span class="muted"><br>图表达意选型正确、图中数字与正文一致、可直接演示</span></td>
+          <td class="sc">趋势/对比/构成选型与论点匹配；图中数值与正文同源同值；无溢出、缺图、错位，风格统一专业。</td>
+          <td class="sc">可演示；仅图题/图例措辞或 1 处选型可更优，无图表性错误。</td>
+          <td class="sc">有图表与论点不够贴切或存在轻微比例误导风险、局部文字溢出，需人工调一版。</td>
+          <td class="sc">图表误导（坐标截断、图与正文矛盾、单位缺失）或版式多处错乱，需返工。</td>
+          <td class="sc">渲染失败 / 数据缺失 / NaN，无法上屏。</td>
+        </tr>
+        <tr>
+          <td class="dim-t">多语言表达（10%）<span class="muted"><br>目标语种地道、术语统一、无机器腔</span></td>
+          <td class="sc">语气/术语/敬语（JA/KO）在目标市场语境中自然，全稿术语口径统一，无翻译腔。</td>
+          <td class="sc">自然可读，个别术语或语气用词可再打磨。</td>
+          <td class="sc">通顺但可明显感知非母语（机器腔/敬语错档），需润色一稿。</td>
+          <td class="sc">存在用词/语法/术语不统一错误，影响客户专业观感。</td>
+          <td class="sc">语句不通顺，不可交付。</td>
+        </tr>
+        <tr>
+          <td class="dim-t">人机协作 / 确认流（25%）<span class="muted"><br>待确认点是否准确且必要、问题是否好答、口径变更是否全局联动</span></td>
+          <td class="sc">确认点只落在真正关键、材料无据或口径冲突处；每题是「是/改/补数据」秒级可答；中途改口径会触发全局提示与连锁重确认，无新旧口径混用。</td>
+          <td class="sc">确认点基本合理，偶有 1 处不必要打扰；措辞可秒答。</td>
+          <td class="sc">若干不必要/重复确认（噪音）或漏标 1 处关键项；仍能走完但负担略增、信任感打折。</td>
+          <td class="sc">确认负担显著（每问要查证、无选项、次数过多）或漏标关键点留下隐患；改口径引发新旧混用。</td>
+          <td class="sc">确认流阻塞流程（问不下去）或形同虚设（诱导一键全过）。</td>
+        </tr>
+      </tbody>
+      <tfoot><tr class="row-total"><td>合计</td><td colspan="5">20% + 30% + 15% + 10% + 25% = 100%　·　档位总分 = Σ(档分 × 权重)，供诊断与排序</td></tr></tfoot>
+    </table></div>
+    <div class="note">评分锚点说明：每档锚到「这份稿子现场用起来会发生什么」，而非内部技术描述，保证不同评测员对同稿能落到同一档；事实维度 3 档特意允许「有错但用户可自检发现」——它不直接判死，但会抬高自检成本，从而被 <a href="#metrics">§四 成本指标</a> 捕获。</div>
+
+    <!-- 端到端层 -->
+    <h3 id="sys-e2e">1.2 端到端层评测</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4>评测目标</h4>
+        <p>回答唯一的关键问题：<strong>在真实使用流程（想法→成稿→用户核验→定稿→敢不敢直接拿去正式场合）下，Sasha 们是否愿意、且敢把这份稿子直接上会。</strong>它把子能力的表现翻译成用户行为与感受结果，是放行的主战场。</p>
+      </div>
+      <div class="card">
+        <h4>通过线（本层 = 最终放行，黄金主线需同时满足）</h4>
+        <p><strong>M1 事实硬门槛</strong>：全部样本终稿「编造 = 0、值与源不一致 = 0、待确认清零率 = 100%」。<br>
+        <strong>M2 直接上会率 ≥ 60%</strong>（愿意度 ≥ 7/10 且无需结构性重做；双人独立评，从低计）。<br>
+        <strong>M3 自检成本</strong>：核验中位 ≤ 8 分钟/20 页稿，P90 ≤ 15 分钟，无任务超 25 分钟。<br>
+        <strong>M4 恢复成本</strong>：故障注入后修复中位 ≤ 6 分钟，连锁改版 = 0，修复后残留不一致 = 0。<br>
+        <strong>M5 现场抗问</strong>：随机抽 3 个数字/结论追问「怎么证明」，≥ 90% 能在稿内来源/口径注里直接答上。</p>
+      </div>
+    </div>
+
+    <div class="tbl-wrap"><table>
+      <thead><tr><th style="width:200px;">端到端维度（权重）</th><th>测的是什么结果</th><th style="width:150px;">主要测量口径</th><th style="width:150px;">数据来源</th></tr></thead>
+      <tbody>
+        <tr><td class="dim-t">定稿事实可放心度（35%）</td><td>终稿里已「不可逆交付」的事实正确性：无编造、无值错、无未清待确认——这是敢上会的底线。</td><td>规则扫描 + judge 复核交叉；按错误类型（值/口径/单位/汇率/张冠李戴）分类计错。</td><td>机器 + LLM judge</td></tr>
+        <tr><td class="dim-t">自检成本（20%）</td><td>用户把生成稿变成敢交付稿要付多少核对/修改时间与脑力。</td><td>harness 时间戳 + 屏幕录像分段 + 退出问卷互证（详见 §四）。</td><td>机器计时 + 用户</td></tr>
+        <tr><td class="dim-t">失败恢复与现场抗问（15%）</td><td>出错后（上会前逮住、或现场被问住）定位—修复—无连带的成本，以及稿子能否自证。</td><td>故障注入计时 + 演示者「证明这个数」对答演练。</td><td>机器计时 + 人工</td></tr>
+        <tr><td class="dim-t">直接上会愿意与信心（30%）</td><td>用户主观：敢不敢不预留专项校对直接用于真实正式场合；信心相比「无确认流基线」的增量。</td><td>0–10 愿意度 + 7 点量表前后测，设对照组。</td><td>人工（准目标用户）</td></tr>
+      </tbody>
+      <tfoot><tr class="row-total"><td>合计</td><td colspan="3">35% + 20% + 15% + 30% = 100%　·　端到端加权分用于横向报告；放行看 M1–M5 的并列判定，不靠加权</td></tr></tfoot>
+    </table></div>
+    <div class="note">5 档行为细则与上一表同法（1=大量不可用 / 3=勉强但不敢直接用 / 5=敢直接上会且不心虚）。量化分档由 <a href="#method-human">§三.3 人工打分表</a> 给出，避免两处重复表述。之所以人工维度占 30%——因为「放心」的最终计量单位是<strong>人的愿意度</strong>，不是系统自报指标。</div>
+
+    <!-- 合成 -->
+    <h3 id="sys-compose">1.3 两层如何合成与放行</h3>
+    <ul>
+      <li><strong>判定</strong>：逐任务由 机器硬门槛 + LLM judge + 人工 依次跑（<a href="#method-flow">流水线见 §三.4</a>），M1–M5 全绿 = 该任务「可放心用于正式场合」。</li>
+      <li><strong>聚合</strong>：跨任务报「直接上会率」「各维度均分与最低分」，子能力加权分仅用于<strong>诊断与回归排序</strong>，识别拖后腿的模块。</li>
+      <li><strong>否决项（红线）</strong>：M1 任一任务不满足、或事实维度单任务 ≤ 2、或确认流单任务 ≤ 2 → 该任务整稿不通过，不进任何加权平均稀释。这是对「加权会掩盖致命错误」的硬防御。</li>
+      <li><strong>分阶段放行</strong>：P0 离线 → P1 内部导演评测 → P2 真实用户灰测 → P3 公开发布，逐级门槛见 <a href="#tradeoff">§五.3</a>。</li>
+    </ul>
+  </section>
+
+  <!-- ============ 二 Benchmark ============ -->
+  <section id="bench">
+    <div class="kicker">二 · Benchmark 基准集</div>
+    <h2>黄金基准集 + 对抗/边界扩展集<span class="cn">抽题维度先定，保证可扩展可复核</span></h2>
+
+    <h3 id="bench-dim">2.1 抽题维度（抽样空间）</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>维度</th><th>取值 / 分档</th><th>为什么纳入</th></tr></thead>
+      <tbody>
+        <tr><td class="dim-t">场景类型</td><td>首次客户提案 / 阶段与续约汇报 / ROI 专项 / 竞品对比 / 紧急速记（pre-read 小稿）</td><td>对外正式汇报下最常见的几种话术任务；v1 只在「对外正式商业汇报」主线上判放行，其余为诊断素材。</td></tr>
+        <tr><td class="dim-t">复杂度 L1/L2/L3</td><td>L1 ≈ 5–7 页单一来源；L2 ≈ 12 页、2–3 数据源、含图表需求；L3 ≈ 18–22 页、多源含口径冲突/ROI 多假设</td><td>压力分层：找出在哪种复杂度下信任开始崩。</td></tr>
+        <tr><td class="dim-t">语言</td><td>EN（主线）/ DE / FR / JA / KO / 中（抽测）</td><td>验证「多语言」声明，但 v1 通过线只锚 EN；JA/KO 仅防严重退化。</td></tr>
+        <tr><td class="dim-t">数据量</td><td>S ≤5 个数 / M 6–20 / L &gt;20 需取舍呈现</td><td>数据密度上升时，校验引擎与确认流最先告急。</td></tr>
+        <tr><td class="dim-t">素材可信度构成</td><td>一手实测 / 有来源行业基准 / 销售纪要（含口头数字）/ 混入需排除的不可信材料</td><td>决定「哪些该被标待确认、哪些可直接用」——是引擎的核心判别面。</td></tr>
+        <tr><td class="dim-t">口径核对项</td><td>统计范围、单位与汇率、基准日、四舍五入与合计、口径变更</td><td>让每道题都自带「可核对的事实地雷」。</td></tr>
+        <tr><td class="dim-t">输出形态</td><td>页数、是否要求 ROI 测算/图表、是否要求来源注</td><td>让任务约束落到成稿上可检查。</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3 id="bench-gold">2.2 黄金基准集：Sasha 式 B2B 商业价值演示 × 10 题（G1–G10）</h3>
+    <p>每题均为「可直接拿去给真人评测的任务包」：<strong>场景说明 + 输入素材（含刻意埋的数据点与口径核对项）+ 输出约束 + 评分卡</strong>。主线（放行判定）只用 EN 题；G4 作多语言抽测。</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>ID</th><th>场景 / 语言 / 复杂度</th><th>任务（示意）</th><th>这道题主测 / 埋的核对项</th></tr></thead>
+      <tbody>
+        <tr><td class="dim-t"><span class="numtag">G1</span>首次提案</td><td>EN · L2 · M</td><td>售前顾问 Sasha 为潜在客户（跨国零售集团）制作 30 分钟「商业价值演示」：输入 = 内部 POC 实测（货架周转、线上转化）+ 有来源行业基准，要求含 ROI 测算与来源注，12–15 页。</td><td>主线全套：口径注释可不可用、ROI 假设是否标注、有无把 POC 实测当行业基准张冠李戴。</td></tr>
+        <tr><td class="dim-t"><span class="numtag">G2</span>ROI 专项</td><td>EN · L3 · M</td><td>客户 CFO 在场：给 TCO 基线与三档假设，收敛为单页 ROI + 敏感性说明；要求把每档假设的出处与口径写清，页数不限。</td><td>敏感性数字与三档假设是否一一对应；假设是否被误写成已证事实。</td></tr>
+        <tr><td class="dim-t"><span class="numtag">G3</span>阶段/续约汇报</td><td>EN · L2 · M</td><td>老客户季度价值复盘：上季承诺口径 vs 本季实际，素材含一处「统计口径变更」需显式标注，避免新旧口径混比。</td><td>口径变更是否被识别并提示；两季数字是否统一到同一口径。</td></tr>
+        <tr><td class="dim-t"><span class="numtag">G4</span>多语种交付</td><td>JA / KO · L1–L2 · S–M</td><td>把同一价值主张做成日文/韩文客户首稿（8 页），校验商务敬语与术语一致性。</td><td>非 EN 地道度与术语统一（抽测，不阻断主线）。</td></tr>
+        <tr><td class="dim-t"><span class="numtag">G5</span>竞品对比</td><td>EN · L2 · M</td><td>我方与两家竞品的功能/价格散点 → 客观对比页；仅允许引用有来源数据，不得过度贬损。</td><td>合规与「有据可依」：无源对比声明是否被拦/被标待确认。</td></tr>
+        <tr><td class="dim-t"><span class="numtag">G6</span>大数据取舍</td><td>EN · L3 · L</td><td>输入 20+ 条 KPI 与分门店数据，需围绕论点挑 TOP 呈现并标注数据截止日与口径，而非全量堆砌。</td><td>取舍是否贴合论点；呈现口径是否标注；合计与分项是否一致。</td></tr>
+        <tr><td class="dim-t"><span class="numtag">G7</span>纪要提炼</td><td>EN · L2 · M</td><td>输入一段销售纪要 + 邮件往来，抽取主张与数字成稿；其中口头数字无来源。</td><td>无来源口头数字是否被标待确认而非直接入稿。</td></tr>
+        <tr><td class="dim-t"><span class="numtag">G8</span>旧稿改造</td><td>EN · L2 · M</td><td>面向 A 行业客户的旧稿改造成零售行业版：数字主体不动、措辞与案例替换，须保持口径一致、不串行业。</td><td>跨稿一致性：改造后是否引入与素材冲突的行业数据。</td></tr>
+        <tr><td class="dim-t"><span class="numtag">G9</span>紧急速记</td><td>EN · L1 · S</td><td>会前夜仅给一句话核心 + 几行要点，要 5 页 pre-read + 配套 deck，可上会兜底。</td><td>极端简略输入下是否编造填充、是否把「缺数据」明示为用户待补。</td></tr>
+        <tr><td class="dim-t"><span class="numtag">G10</span>估算与缺失</td><td>EN · L2 · M</td><td>素材含估算值与缺口，要求输出时显式标「估算」并给置信说明，不得写成精确事实。</td><td>估算 vs 事实的措辞纪律；缺数处的留白引导。</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h4>覆盖矩阵（10 题如何填满抽样空间）</h4>
+        <ul style="font-size:13px;">
+          <li>场景类型：首提 G1G5 / 阶段续约 G3 / ROI 专项 G2 / 竞品 G5 / 速记 G9 —— 5 类全覆盖。</li>
+          <li>复杂度：L1×G9G4 / L2×G1G3G5G7G8G10 / L3×G2G6 —— 2:6:2。</li>
+          <li>语言：EN ×9 主线 + JA/KO ×1 抽测。</li>
+          <li>数据量：S×G9 / M×多数 / L×G6；素材可信度混入不可信材料 G5、口头无源 G7。</li>
+          <li>口径核对项：口径变更 G3、汇率/单位 <a href="#bench-ext">扩展 E5/E6</a>、估算纪律 G10、ROI 假设 G2。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>基准集的质量保障（防自欺）</h4>
+        <ul style="font-size:13px;">
+          <li><strong>Ground Truth 双标注</strong>：每题的「数据点真相表」（每个数 = 源 + 口径 + 是否为编造诱饵）由 2 人独立制作，Kappa ≥ 0.8 才入库，冲突提交仲裁。</li>
+          <li><strong>防泄漏</strong>：评测数据集与产品训练/调参语料隔离、版本化；生成侧不预置答案。</li>
+          <li><strong>刷新节奏</strong>：黄金集每季度按维度格再抽题滚动更新，防过拟合与背题。</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="bench-ext">2.3 拓展集：对抗与边界用例（每类给出现例 + 期望行为 = 评测判据）</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th style="width:170px;">类别</th><th style="width:44%;">具体用例（1–2 条）</th><th>期望产品行为 = 评测判据</th></tr></thead>
+      <tbody>
+        <tr><td class="dim-t">矛盾数据源</td><td>同一「门店数」两份材料分别写 480 / 620（统计范围一为直营、一为含加盟）；ROI 基准「人工成本节省 25%」来源 A 与 B 数值冲突。</td><td>不静默取一，应提示冲突、指出差异来源，交用户裁决后才入稿。</td></tr>
+        <tr><td class="dim-t">无来源关键数字</td><td>纪要写「可提升市场份额 20%」，全稿无出处；口头承诺「上线后周转提速 3 天」。</td><td>标待确认/「来源缺失」，不进终稿；误放即记 M1 值错。</td></tr>
+        <tr><td class="dim-t">中途改需求</td><td>用户确认过半后把「门店数」口径改为「活跃门店数」，全稿多处受影响。</td><td>触发全局重确认与连锁数字联动提示，终稿无新旧口径混用。</td></tr>
+        <tr><td class="dim-t">极端简略输入</td><td>只输入一句「讲讲我们方案的价值」。</td><td>产出最小可演示骨架，并列出「需你补哪些数据」，不编造填充。</td></tr>
+        <tr><td class="dim-t">歧义/双关</td><td>材料用词「store count uplift」既指门店数也含线上铺货范围；数字 8k 未标是人还是门店。</td><td>对影响数值的量纲歧义主动提问，而非猜一个写进稿里。</td></tr>
+        <tr><td class="dim-t">单位不一致</td><td>同表里金额既出现「万」又出现个位元、百分比合计 101%（四舍五入漂移）。</td><td>单位换算提示 + 合计/分项校验自动检出并给出纠正建议。</td></tr>
+        <tr><td class="dim-t">币种 / 汇率</td><td>混用 EUR/USD 未标，或隐含按某日汇率折算而素材未给。</td><td>识别并提示统一口径、标注换算基准日；无依据的换算不默认进行。</td></tr>
+        <tr><td class="dim-t">需避免编造的空白</td><td>新市场无公开基准：诱导填「行业平均退货率 2%」。</td><td>不虚构基准，留占位 + 引导用户提供，或显式标「无公开可比基准」。</td></tr>
+        <tr><td class="dim-t">防幻觉引用</td><td>诱导引用某客户公开年报数字/某法规条款，素材里根本没有。</td><td>标注来源缺失或拒绝引用；引用须带可定位的来源编号（防张冠李戴）。</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note">扩展集不参与主线放行判定，单独立卡（P0 断言库 / 复测集）：任何一行「期望行为」未命中都记为引擎缺陷，进入缺陷池。它专门用来逼出 <strong>待验证模块（事实校验引擎）</strong> 的漏网。</div>
+  </section>
+
+  <!-- ============ 三 评测方式与分工 ============ -->
+  <section id="method">
+    <div class="kicker">三 · 评测方式与分工</div>
+    <h2>机器管「可检查」，judge 管「质量」，人工管「信任」<span class="cn">三类各能脚本化的都列到检查项与指标</span></h2>
+
+    <h3 id="method-rule">3.1 代码 / 规则自动评测（每份成稿全量跑，成本秒级）</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th style="width:44px;">#</th><th>可脚本化检查</th><th>判定逻辑（规则简述）</th><th>通过指标（黄金主线）</th></tr></thead>
+      <tbody>
+        <tr><td class="n">R1</td><td>值与源一致性</td><td>终稿每个带来源编号的数字，与「数据点真相表」做数值规范化比对（含单位换算后的同值判定）。</td><td>0 处不一致（编造/错值 = 0）。</td></tr>
+        <tr><td class="n">R2</td><td>无源项检出（recall）</td><td>引擎应把「素材无出处」的声明型数字标为待确认；用真相表标注的无源项核对检出情况。</td><td>确认点级召回 ≥ 90%；终稿泄漏 = 0（硬门槛）。</td></tr>
+        <tr><td class="n">R3</td><td>误标 / 打扰率（precision）</td><td>反向核对：素材有源、无需确认的数字被误标的比例与每稿个数。</td><td>均值 ≤ 2 个/稿，不必要确认占比 ≤ 15%。</td></tr>
+        <tr><td class="n">R4</td><td>待确认清零率</td><td>定稿时残留「待确认」旗标数 / 生成阶段旗标总数。</td><td>100%（主线硬门槛）。</td></tr>
+        <tr><td class="n">R5</td><td>跨页同源同值</td><td>同一数字在正文/图表/摘要多处出现是否一致（防改一漏一）。</td><td>0 处不一致。</td></tr>
+        <tr><td class="n">R6</td><td>口径一致性 &amp; 单位/币种</td><td>字典 + 规则：单位混用未标、币种未标/汇率无基准日、统计口径前后不一。</td><td>0 处未处理；被正确提示为「已标记处理」。</td></tr>
+        <tr><td class="n">R7</td><td>合计与四舍五入</td><td>百分比合计 ≈ 100、分项求和 = 合计、估算值被显式标注。</td><td>0 处漂移未处理。</td></tr>
+        <tr><td class="n">R8</td><td>引用保真</td><td>稿内 [来源编号] 对应的数字在真相表中指向同一出处。</td><td>0 处错标。</td></tr>
+        <tr><td class="n">R9</td><td>格式 / 内容完整性</td><td>无空占位/空白页、标题齐全、图表可渲染、无 NaN/无限值/溢出越界。</td><td>0 处阻塞缺陷。</td></tr>
+        <tr><td class="n">R10</td><td>计时（harness）</td><td>埋点记录各阶段 wall-clock 与用户动作序列，供 <a href="#metrics">§四</a> 自检/恢复成本计算。</td><td>原始数据完整率 ≥ 99%。</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3 id="method-llm">3.2 LLM judge 评测（需要语义、但可标准化的项）</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4>负责哪些判断</h4>
+        <ul>
+          <li>结构逻辑：结论先行与否、论证链完整度（对应子能力「结构合理性」初判）。</li>
+          <li>图表与论点匹配：这张图是不是在支撑这句论点，有无误导。</li>
+          <li>语言地道度（EN/JA/KO）机器腔初筛。</li>
+          <li>确认流自然度：确认问题是否必要、是否好答、是否选择题而非开放式难题。</li>
+          <li>「会被客户问住的点」候选提取：把可能打脸的论证缺口枚举出来喂给人工追问。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>配置要点与防偏置</h4>
+        <ul>
+          <li><strong>模型隔离</strong>：judge 与生成模型不同（跨厂商或至少不同实例），避免偏好自家输出。</li>
+          <li><strong>逐条依据</strong>：强制 judge 先引用稿内行号/原文证据再给分；无证据的评分作废并要求重出。</li>
+          <li><strong>拒绝模式+锚样例</strong>：给 2 个已人工标定好分数的「锚例」校准其尺度；给出它不该评分的输入（如只评结构不评事实，事实归规则）。</li>
+          <li><strong>双盲 + 乱序</strong>：不告知模型版本/厂商；多次采样取中位数。</li>
+          <li><strong>一致性监控</strong>：每周用固定锚集回归，judge 自评漂移超阈值（如 quadratic kappa &lt; 0.7）即触发重新标定。</li>
+          <li><strong>不给它最终裁判权</strong>：judge 不过关只是「不进人工/打回重跑」的快筛，不直接否决用户已确认的稿子。</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="method-human">3.3 人工评测（信任与主观的最终裁判）</h3>
+    <p>评测员 = <strong>准目标用户</strong>（做过对外客户汇报的售前/咨询顾问，非产品作者、非测试团队的「内部人滤镜」），外加「假客户扮演者」负责挑刺。</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th style="width:240px;">人工题项</th><th>形式</th><th>判定要点</th></tr></thead>
+      <tbody>
+        <tr><td class="dim-t">直接上会愿意度</td><td>0–10 + 一句理由</td><td>≥ 7 且「无需结构性重做、不预留 &gt;0.5h 专项校对」计为可直接上会；双人独立评，从低计。</td></tr>
+        <tr><td class="dim-t">像不像敢拿给真客户的稿子</td><td>假客户扮演者以挑刺心态通读 + 挑「当场会打脸的 3 处」</td><td>挑出的致命点能否被稿内来源/口径注自证；挑不出 = 加分。</td></tr>
+        <tr><td class="dim-t">现场被问住风险评估</td><td>演示者演练 + 追问「怎么证明这个数/这句结论」× 3</td><td>≥ 90% 能在稿内直接答上；答不上处记录是缺来源还是缺口径解释。</td></tr>
+        <tr><td class="dim-t">职业信任感</td><td>7 点量表 + 自由评论</td><td>「用了它反而更担心个人信誉」是否出现；负面评论逐条归类。</td></tr>
+        <tr><td class="dim-t">确认负担主观题</td><td>Likert：确认环节是否打断思路 / 数量是否过多 / 问题是否好答</td><td>与 R3 客观打扰率互证，防「客观 OK 但主观反感」漏判。</td></tr>
+        <tr><td class="dim-t">口径注释可读性</td><td>假客户追问 + 用户复述</td><td>口径注是不是「客户能看懂」而不是工程师黑话。</td></tr>
+      </tbody>
+    </table></div>
+    <p><strong>抽样量建议（v1 主线）</strong>：黄金 10 题 × 3 个 seed = 30 份 EN 定稿；每份至少 2 名人工评测员独立打分（一致性 Kappa ≥ 0.7 才计入，低于则扩评）。准目标用户样本 ≥ 8–10 人、每人 3 份、约 1–1.5 小时/轮。预算不足时的最小可跑形态：内部专家代位 + 2 名外部准用户先做 P1 灰测，P2 再上足量用户。统计口径说明：v1 定位是<strong>门槛判定 + 回归门禁</strong>，不是推断性 A/B；若要在 GA 前做显著性论证，再按功效分析扩样（此诚实在《评估声明》里写明）。</p>
+
+    <h3 id="method-flow">3.4 三层分工互补：一条三级门控流水线</h3>
+    <div class="flow">
+      <div class="fnode">
+        <span class="step">第 1 级 · 规则快筛（全量 · 秒级）</span>
+        <b>机器 / 规则</b>
+        <ul><li>R1–R9 硬门槛扫描</li><li>R10 计时数据采集</li></ul>
+        <div class="gate">不过 → 打回重生成/重确认，不进下级</div>
+      </div>
+      <div class="fnode">
+        <span class="step">第 2 级 · LLM judge（全量 · 分钟级）</span>
+        <b>质量与风险初筛</b>
+        <ul><li>结构/图表匹配/语言/确认流</li><li>提取「会被问住的点」候选</li></ul>
+        <div class="gate">分数 < 阈值 → 人工低优先 + 打回；过 → 进人工</div>
+      </div>
+      <div class="fnode">
+        <span class="step">第 3 级 · 人工（抽样 · 放行）</span>
+        <b>信任与主观</b>
+        <ul><li>直接上会愿意度 / 信任感</li><li>假客户挑刺 + 现场抗问演练</li><li>对 judge 候选追问点复核</li></ul>
+        <div class="gate">M1–M5 全绿 = 放行；否则记缺陷并按类回流</div>
+      </div>
+    </div>
+    <p class="muted">互证规则：规则与 judge 结论冲突（如机器判某值一致、judge 认为口径可疑）→ 以人工核对原始素材为最终裁决，并记入「错误分类」。每一处终稿被逮住的错都回流到缺陷池，按月复盘「漏到用户面前的那一层」，而不是只看修复。</p>
+  </section>
+
+  <!-- ============ 四 关键测量指标 ============ -->
+  <section id="metrics">
+    <div class="kicker">四 · 关键测量指标</div>
+    <h2>题目强调的四类信任指标：定义 + 测量方式<span class="cn">每一条都给「算的是什么、怎么量、怎么算过」</span></h2>
+    <p>完成率与生成耗时照常上报，但<strong>不作为放行项</strong>（见 §五 取舍）：速度是已集成能力（模型/模板）的基线，不是「敢不敢上会」的判据。真正判据是下面四类。</p>
+
+    <div class="tbl-wrap"><table>
+      <thead><tr><th style="width:170px;">指标</th><th style="width:38%;">定义（边界）</th><th>测量方式</th><th style="width:170px;">通过线 / 解读</th></tr></thead>
+      <tbody>
+        <tr><td class="dim-t">完成率 &amp; 生成耗时（基线）</td>
+          <td>能走完「生成→确认→定稿」未中途放弃的任务占比；首稿与全链路耗时。</td>
+          <td>harness 埋点 + 任务终态标记。</td>
+          <td>上报不 gate：完成率 ≥ 95%、首稿中位 ≤ 3 分钟（15 页级）、全链路中位 ≤ 12 分钟；出现「无法走完/中途放弃」即红牌专项。</td></tr>
+        <tr><td class="dim-t"><strong>事实正确性</strong>（结果级）</td>
+          <td>终稿（定稿时刻、不可逆）中每个数据点与「输入素材 + 用户已确认结论」一致；口径/单位/汇率/基准日无误；<strong>不存在编造</strong>（素材无依据且未经确认即出现在终稿）。按错误类型拆：值错 / 口径错 / 单位/汇率错 / 张冠李戴 / 编造。</td>
+          <td>R1/R5/R6 机器全量比对 + judge 复核交叉；每稿人工抽 10 处数字复核；错误按类型归类，编造与值错单独计数。</td>
+          <td>编造 = 0、值错 = 0（M1 硬门槛）；「口径正确率」≥ 98%；错误类型周报用于归因引擎缺陷。</td></tr>
+        <tr><td class="dim-t"><strong>自检成本</strong>（交付前核对/修改）</td>
+          <td>用户把生成稿变为敢交付稿所需的<strong>全部用户侧动作时间</strong>：逐页通读、核对每处标黄待确认、纠正发现的问题——不含素材输入与自行再创作。等价刻画：确认点数量 × 平均每点决策时长 + 修正时长。</td>
+          <td>屏幕录像 + 点击/埋点把时间轴分段（创作段 vs 核验段），退出后与用户 RTA 回放互证分段；另量「每个确认点决策时长」看负担质量，不只总量。</td>
+          <td>20 页级稿：核验中位 ≤ 8 分钟、P90 ≤ 15 分钟、无任务超 25 分钟；平均每确认点决策 ≤ 15 秒，超时说明确认题设计过难。</td></tr>
+        <tr><td class="dim-t"><strong>失败后的恢复成本</strong></td>
+          <td>错误被逮住后（上会前自检逮住、或评审/客户指出 1 处实质错误）用户定位—修复—确认无连带的全部成本；含「现场被问住时能否当场自证」。</td>
+          <td><strong>故障注入</strong>：对完成稿人工植入 1 处真实错误（改数与口径冲突 / 制造两处矛盾 / 改口径），请用户修复计时，从「指出有错（不提示位置）」开始；观测是否借助产品内一致性提示定位；记录定位时间、修复时间、连锁改页数、复检残留。</td>
+          <td>修复中位 ≤ 6 分钟、P90 ≤ 12 分钟；连锁改版 = 0；复检无残留一致率 100%；现场对答演练 ≥ 90% 命中稿内出处。</td></tr>
+        <tr><td class="dim-t"><strong>愿直接使用比例 / 信心</strong></td>
+          <td>（比例）受控任务中，用户评估「可直接用于真实客户正式场合、无需结构性重做」的成稿占比；（信心）用户主观安心度及其相对「无确认流基线」的增量——因为「信任」正是本产品相对普通 AI 生成器的差异主张，须设对照。</td>
+          <td>0–10 直接上会愿意度（≥ 7 计通过）；7 点信心量表前后测；同任务跑一个「不强制逐项确认」的基线版做对照，量化 DeckSure 确认流带来的信心增量；防预期偏差：评测员不提前透露对照目的。</td>
+          <td>直接上会率 ≥ 60%（M2）；相对基线信心增量 ≥ +1.0 点（7 点）；「因用产品更担心个人信誉」的负面评论占比 < 10%。</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note">四类指标如何合看：<strong>正确性</strong>是底线（错 0），<strong>自检与恢复成本</strong>量化「为求安心付的代价」，<strong>直接使用比例与信心</strong>是结果面。三者若出现「正确性全绿但用户还是不敢直接用」，说明问题不在数据而在信任感/确认体验——这本身就是一条关键产品发现。</div>
+  </section>
+
+  <!-- ============ 五 取舍与诚实披露 ============ -->
+  <section id="tradeoff">
+    <div class="kicker">五 · 主动取舍与诚实披露</div>
+    <h2>首版只测一条主线 + 区分已验证与待验证<span class="cn">为什么这么定通过线最稳</span></h2>
+
+    <h3 id="t-scope">5.1 主动取舍</h3>
+    <ul>
+      <li><strong>首版只测「对外正式商业汇报」一条主线场景</strong>（Sasha 式 30 分钟客户价值演示），不把内部培训、教学、新闻稿等副线纳入放行判定。理由：信任命题高度依赖场景语境——「敢用于正式场合」在客户商业演示里意味着数据会被财务级审校，判据最严、最能暴露产品短板；把通过线钉在<strong>最难且最有价值的场景</strong>上，若它过了，旁路场景可信度更高。</li>
+      <li><strong>保留人工逐项确认节点</strong>：首版通过线明确把「用户拍板定稿」作为流程必要一环，不承诺「一键全自动定稿」。理由：可放心度的来源不是「机器全对」，而是「用户基于高质量信息做过判断」。全自动在信任命题下是负资产——这正是 <a href="#metrics">信心对照（§四）</a> 要量化的判断。</li>
+      <li><strong>为什么这个通过线最稳</strong>：M1–M5 全部锚到<strong>用户行为与外部可观察结果</strong>（会不会被问住、愿不愿直接用、为安心花多少时间），而不是锚到「引擎内部指标」。这样通过线不会被自家产品实现细节绑架，也避免「加权平均掩盖致命错误」的经典坑。</li>
+      <li><strong>完成率与速度不设 gate</strong>：把资源集中在信任判据，避免被「快但错」的假成绩带偏。</li>
+    </ul>
+
+    <h3 id="t-status">5.2 已验证 vs 待验证能力（诚实清单）</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>能力</th><th>状态</th><th>本方案中的角色</th></tr></thead>
+      <tbody>
+        <tr><td>文本 + 图像多模态生成（素材抽取、配图）</td><td><span class="chip chk">已验证</span> 已集成、内测可用</td><td>只做回归守门，不设研发型专项评测。</td></tr>
+        <tr><td>模板库 / 图表渲染组件</td><td><span class="chip chk">已验证</span> 基础可用</td><td>子能力「图表排版」常规回归 + 格式完整性 R9。</td></tr>
+        <tr><td>多语言内容创作</td><td><span class="chip chk">已验证（分语种不均）</span> EN 好于 JA/KO</td><td>EN 进主线；JA/KO 抽测防退化，暂不 gate。</td></tr>
+        <tr><td><strong>事实与数据校验引擎</strong>（口径一致、无源检出、冲突/单位/币种、合计校验、引用保真、确认流 UX）</td><td><span class="chip rd">待验证</span> 最大自建模块，是研发与评测主攻点</td><td>专项评测 + 分阶段灰度判据（见下），是放行前的核心不确定性。</td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted">诚实的隐含声明：即使引擎指标全绿，「可放心」仍以用户愿意度为最终裁定——因此 §四的信心指标不是锦上添花，而是放行的组成部分。</p>
+
+    <h3 id="t-gate">5.3 针对待验证项（事实校验引擎）的专项评测与灰度判据</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>阶段</th><th>评测内容</th><th>出口门槛（不过则回滚/不转正）</th></tr></thead>
+      <tbody>
+        <tr><td class="dim-t">P0 · 离线合成单测</td>
+          <td>引擎断言库 N=150+（无源应标、有源不标、冲突、口径变更、单位/币种/汇率、合计漂移、估算纪律），Ground Truth 双标注。</td>
+          <td>无源召回 ≥ 90%、冲突检出 ≥ 95%、引用错标 = 0；<strong>打扰率</strong>（误标）均值 ≤ 2 个/稿——确认流若变成噪音，信任感反而下降，这是双目标约束。</td></tr>
+        <tr><td class="dim-t">P1 · 内部导演评测</td>
+          <td>黄金集全跑，规则 + judge + 内部专家按 §三流水线。</td>
+          <td>M1–M5 全绿一次（编造 = 0、直接上会率 ≥ 60%、成本分位达标）。</td></tr>
+        <tr><td class="dim-t">P2 · 真实用户灰测</td>
+          <td>外部准目标用户 ≤ 20 人、真实素材副驾驶模式（确认流不阻断，仅观测）。</td>
+          <td>直接上会率 ≥ 55%、编造事故 = 0、信任感均分 ≥ 4/5、自检成本符合预算线；任何「用户因产品翻车不敢再用」为 blocker。</td></tr>
+        <tr><td class="dim-t">P3 · 公开发布（GA）</td>
+          <td>灰度批次全量 + 事故复盘。</td>
+          <td>P1 门槛重现通过；<strong>「客户当场抓错」= blocker</strong>，需根因复盘并回到 P0 补断言后才能继续放量；宣称「可放心用于正式场合」仅在 P3 达标后对主线场景生效。</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note">标定诚实：所有阈值（60%、8 分钟、P90 等）都是<strong>v1 先验假设</strong>，首次基线跑完即按数据重新标定一次并预注册，避免「测完再调线凑通过」；调线须写明理由并过评审。打扰率与召回的双目标权衡（漏标 = 风险、多标 = 负担）是本引擎的核心张力，任何改版回归都要同时盯两条曲线，不允许牺牲一端换另一端分数。</div>
+  </section>
+
+  <!-- ============ 附录 ============ -->
+  <section id="appendix">
+    <div class="kicker">附录</div>
+    <h2>评审核对清单与术语表</h2>
+
+    <h3 id="glossary">A. 关键术语（先定口径，保证评分不吵架）</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th style="width:150px;">术语</th><th>定义</th></tr></thead>
+      <tbody>
+        <tr><td class="dim-t">数据点</td><td>稿件中每个可数值化的声明（数字/百分比/日期/汇率/单位），三类：有源、待确认、未标注。</td></tr>
+        <tr><td class="dim-t">编造</td><td><strong>定稿时刻</strong>仍存在的、素材无依据且未经用户确认的数据点。用户后来补充/拍板确认的不算。</td></tr>
+        <tr><td class="dim-t">口径</td><td>数值背后的统计范围 / 单位 / 基准日 / 计算方式 / 含税与否。</td></tr>
+        <tr><td class="dim-t">待确认清零率</td><td>定稿时残留待确认旗标数 ÷ 生成阶段旗标总数。</td></tr>
+        <tr><td class="dim-t">可直接上会</td><td>用户评估「无需结构性重做、不预留 &gt;0.5h 专项校对」即可用于真实 30 分钟客户正式演示，且事实硬门槛通过。</td></tr>
+        <tr><td class="dim-t">打扰率（误标）</td><td>无需确认的数字被引擎标成待确认的个数与占比（确认流 precision 面）。</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3 id="checklist">B. 对照题目要求的自检清单（评审可逐项打勾）</h3>
+    <ul class="ck">
+      <li>评测体系分「端到端 + 子能力」两层；每层写明评测目标与通过线 —— <a href="#sys">§一</a></li>
+      <li>rubrics 含维度 + 权重（子能力 20/30/15/10/25、端到端 35/20/15/30，各自加总 100%）+ 每档 1–5 行为描述 —— <a href="#sys-cap">§一.1</a> / <a href="#sys-e2e">§一.2</a></li>
+      <li>黄金基准集：Sasha 式商业价值演示 × 10 题，含 ROI 测算、跨国零售集团 30 分钟汇报、数据口径核对项，并给抽题维度与覆盖矩阵 —— <a href="#bench">§二.1–2.2</a></li>
+      <li>拓展集：矛盾源 / 无源数字 / 中途改需求 / 极端简略 / 双关单位汇率 / 防编造空白 等，各给 1–2 例与期望行为 —— <a href="#bench-ext">§二.3</a></li>
+      <li>三类评测方式各有明确场景与指标：机器 10 项脚本化检查、judge 配置与防偏置、人工打分表与抽样量 —— <a href="#method">§三</a></li>
+      <li>三层互补与门控流水线说明 —— <a href="#method-flow">§三.4</a></li>
+      <li>完成率/耗时照报；重点定义 事实正确性 / 自检成本 / 恢复成本 / 愿直接使用比例与信心，每条含定义 + 测量方式 + 通过线 —— <a href="#metrics">§四</a></li>
+      <li>主动取舍（只测对外正式汇报主线、保留人工确认）+ 诚实区分已验证与待验证 + 待验证项的灰度判据门槛 —— <a href="#tradeoff">§五</a></li>
+    </ul>
+  </section>
+
+  <footer style="margin-top:36px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px;">
+    DeckSure 验证方案 V1.0 · 与用户定位页同源（对外正式汇报 · 生成+确认）· 本文件单文件离线可用，无外部依赖
+  </footer>
+</div>
+</body>
+</html>

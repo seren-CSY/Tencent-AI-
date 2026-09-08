@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeckSure · 放心交付的演示文稿 AI 助手</title>
+<style>
+  :root{
+    --ink:#1a2332;
+    --muted:#5b6b7f;
+    --brand:#2f4ed7;
+    --brand-soft:#eef2ff;
+    --line:#e6eaf2;
+    --bg:#f7f8fb;
+    --card:#ffffff;
+    --amber:#b45309;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:0 24px;}
+  .topbar{display:flex;align-items:baseline;justify-content:space-between;padding:20px 0;border-bottom:1px solid var(--line);}
+  .brand{font-weight:700;font-size:18px;letter-spacing:.2px;}
+  .brand span{color:var(--brand);}
+  .topbar small{color:var(--muted);font-size:13px;}
+  .hero{text-align:center;padding:64px 0 40px;}
+  .eyebrow{display:inline-block;background:var(--brand-soft);color:var(--brand);font-size:13px;font-weight:600;
+    padding:6px 14px;border-radius:999px;letter-spacing:.5px;}
+  h1{font-size:34px;line-height:1.35;margin:22px auto 16px;max-width:640px;font-weight:800;}
+  .sub{color:var(--muted);font-size:17px;max-width:680px;margin:0 auto;}
+  section{padding:34px 0;}
+  .kicker{color:var(--brand);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
+  h2{font-size:22px;margin:8px 0 6px;font-weight:800;}
+  .lead{color:var(--muted);max-width:720px;margin-bottom:22px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;}
+  .card b{display:block;margin-bottom:6px;}
+  .card p{color:var(--muted);font-size:15px;}
+  .col{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;}
+  .value{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;}
+  .value .n{color:var(--brand);font-size:26px;font-weight:800;line-height:1;}
+  .value b{display:block;margin:10px 0 4px;font-size:16px;}
+  .value p{color:var(--muted);font-size:14.5px;}
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px;}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;}
+  .step .num{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;
+    justify-content:center;font-weight:700;font-size:15px;margin-bottom:12px;}
+  .step b{display:block;font-size:16px;margin-bottom:4px;}
+  .step p{color:var(--muted);font-size:14px;}
+  .trust{background:linear-gradient(135deg,#1c2b52,#2f4ed7);color:#fff;border-radius:18px;padding:26px 28px;
+    display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center;justify-content:space-between;}
+  .trust b{font-size:17px;font-weight:700;}
+  .trust p{font-size:14px;opacity:.85;max-width:560px;}
+  .trust .tag{font-size:13px;opacity:.92;border:1px solid rgba(255,255,255,.45);padding:4px 12px;border-radius:999px;white-space:nowrap;}
+  footer{padding:28px 0 56px;text-align:center;color:var(--muted);font-size:13px;}
+  @media(max-width:640px){
+    h1{font-size:26px;}
+    .hero{padding:44px 0 24px;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="wrap">
+
+    <div class="topbar">
+      <div class="brand">Deck<span>Sure</span> · 放心交付的演示文稿助手</div>
+      <small>面向客户提案 · 投资人路演</small>
+    </div>
+
+    <header class="hero">
+      <span class="eyebrow">为对外汇报而生的 AI 创作助手</span>
+      <h1>把零散的想法，变成能放心拿出手的演示文稿</h1>
+      <p class="sub">原本需要几小时甚至几天反复打磨的「想法 → 成稿」，现在几分钟完成——结构、版式、图表一步到位，而且经得起正式场合的推敲。</p>
+    </header>
+
+    <section>
+      <div class="kicker">为什么你需要它</div>
+      <h2>赶方案时，时间都耗在了哪</h2>
+      <p class="lead">如果你要定期面对客户、投资人做汇报，下面这些时刻应该不陌生：</p>
+      <div class="cards">
+        <div class="card"><b>反复的手工调整</b><p>从空白页搭结构、调版式，图表一张张手动排，来回改到深夜。</p></div>
+        <div class="card"><b>想法散落各处</b><p>思路分散在文档、消息和截图里，收拢成一篇稿子要来回倒好几轮。</p></div>
+        <div class="card"><b>图表逐项核对</b><p>每一个数字都要确认来源，总担心有某处跟实际情况对不上。</p></div>
+        <div class="card"><b>交付前的没底</b><p>越接近正式场合越担心——万一现场被客户或投资人问住怎么办。</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="kicker">它解决什么</div>
+      <h2>把「改到能用」变成「生成即可放心用」</h2>
+      <p class="lead">DeckSure 会替你完成从结构到排版的粗活，同时把最容易出问题的部分——事实与数据——在交付前拦下来。</p>
+      <div class="card">
+        <p style="color:var(--ink);margin-bottom:8px;"><b style="color:var(--ink);">它怎么做到：</b></p>
+        <p>把散落的要点一次性交给它，先搭出适合该场合的结构与版式，再生成匹配的图表和配图，把一篇可以继续打磨的初稿放到你面前。涉及数字与事实的地方，会明确标出「<b>待你确认</b>」——不确定的内容在定稿前就拦住，而不是留到正式场合，让你替它兜底。</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="kicker">它能带来什么</div>
+      <h2>不只是更快，更是更放心</h2>
+      <p class="lead">省下的时间回到内容本身，专业形象与职业信誉也不再悬在“侥幸”上。</p>
+      <div class="col">
+        <div class="value"><div class="n">⌛</div><b>时间回到刀刃上</b><p>出稿以分钟计，你把精力留给判断与打磨，而不是对付排版与格式。</p></div>
+        <div class="value"><div class="n">🤝</div><b>拿得出手的体面</b><p>统一的商务模板与图表风格，站在客户、投资人面前也专业得体。</p></div>
+        <div class="value"><div class="n">🛡️</div><b>心里有底的交付</b><p>关键数据与说法经你逐项确认后才定稿，正式场合敢放心演示。</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="kicker">怎么用</div>
+      <h2>四步，一稿到底</h2>
+      <div class="steps">
+        <div class="step"><div class="num">1</div><b>抛想法</b><p>用一句话、几条要点，或一份现有素材，说出场合和你最想讲的核心。</p></div>
+        <div class="step"><div class="num">2</div><b>选框架</b><p>它按场合给出结构建议，你挑一版，或直接改成自己的。</p></div>
+        <div class="step"><div class="num">3</div><b>补数据</b><p>填入或导入数据，图表自动生成；关键数字会请你确认。</p></div>
+        <div class="step"><div class="num">4</div><b>放心交付</b><p>全稿核对完毕、你拍板定稿后导出，即可直接用于正式场合。</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="trust">
+        <div>
+          <b>支持多语言内容创作</b>
+          <p>中、英、日、韩，随团队与客户的语言切换；一句话、几行要点或整段素材，都能作为起点。</p>
+        </div>
+        <span class="tag">客户提案</span>
+        <span class="tag">投资人路演</span>
+        <span class="tag">正式汇报</span>
+      </div>
+    </section>
+
+    <footer>灵感，到可放心交付的演示文稿 · DeckSure</footer>
+
+  </div>
+
+</body>
+</html>
