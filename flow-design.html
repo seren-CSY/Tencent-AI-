@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeckSure · 核心创作流程设计（第2题交付物·评审版）</title>
+<style>
+  :root{
+    --ink:#1a2332;
+    --muted:#5b6b7f;
+    --brand:#2f4ed7;
+    --brand-soft:#eef2ff;
+    --line:#e3e8f1;
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --user:#2563eb;      /* Sasha 泳道 */
+    --user-soft:#eaf1ff;
+    --ai:#7c3aed;        /* AI 泳道 */
+    --ai-soft:#f3eefe;
+    --hilt:#b45309;      /* HITL 确认节点 */
+    --hilt-soft:#fdf3e0;
+    --risk:#b91c1c;      /* 无源 / 硬风险 */
+    --risk-soft:#fdeceb;
+    --warn:#b45309;
+    --warn-soft:#fdf3e0;
+    --ok:#15803d;
+    --ok-soft:#e9f7ef;
+    --build:#d97706;     /* 需自建（校验引擎） */
+    --build-soft:#fdf1e0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:0 26px;}
+
+  /* ---------- 头部 ---------- */
+  .headbar{background:linear-gradient(135deg,#16233f,#2f4ed7);color:#fff;border-radius:0 0 18px 18px;}
+  .headbar .inner{max-width:1320px;margin:0 auto;padding:26px 26px 22px;}
+  .hb-top{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;}
+  .brand{font-weight:800;font-size:20px;letter-spacing:.3px;}
+  .brand b{color:#ffd98a;}
+  .hb-top .tag{font-size:12.5px;opacity:.85;letter-spacing:.5px;}
+  h1{font-size:24px;font-weight:800;margin:14px 0 6px;line-height:1.4;}
+  .headbar .sub{font-size:14px;opacity:.9;max-width:1060px;}
+  .pillbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .pill{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.45);color:#fff;}
+  .pill .v{font-weight:700;color:#ffd98a;}
+
+  /* ---------- 通用版式 ---------- */
+  section{padding:26px 0 4px;}
+  .kicker{color:var(--brand);font-size:12.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;}
+  h2{font-size:21px;margin:4px 0 4px;font-weight:800;}
+  .lead{color:var(--muted);font-size:14px;max-width:1000px;margin-bottom:12px;}
+  .subhead{font-size:14px;font-weight:800;color:var(--ink);margin:16px 0 8px;}
+
+  .rule{height:1px;background:var(--line);margin:10px 0 0;}
+  .note{font-size:12.5px;color:var(--muted);}
+
+  /* ---------- 图例 / 徽标 ---------- */
+  .legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:10px 0;font-size:12.5px;color:var(--muted);align-items:center;}
+  .lg{display:inline-flex;align-items:center;gap:6px;}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap;}
+  .c-ok{background:var(--ok-soft);color:var(--ok);}
+  .c-hilt{background:var(--hilt-soft);color:var(--hilt);border:1px solid #eec37f;}
+  .c-auto{background:var(--ai-soft);color:var(--ai);}
+  .c-usr{background:var(--user-soft);color:var(--user);}
+  .c-risk{background:var(--risk-soft);color:var(--risk);}
+  .c-warn{background:var(--warn-soft);color:var(--warn);}
+  .c-cap{background:#eef0f6;color:#4a566b;}
+  .c-build{background:var(--build-soft);color:var(--build);border:1px dashed #dca25a;}
+
+  /* ---------- ① 全景泳道图 ---------- */
+  .panorama{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 14px 14px;margin-top:4px;}
+  .scrollx{overflow-x:auto;padding-bottom:4px;}
+  .stagegrid{min-width:1170px;}
+  .flowaxis{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+  .flowaxis .t{font-size:12px;color:var(--muted);white-space:nowrap;}
+  .flowaxis .bar{flex:1;height:2px;background:linear-gradient(90deg,var(--brand),var(--ok));opacity:.5;}
+  .flowaxis .end{font-size:12.5px;font-weight:700;color:var(--ok);white-space:nowrap;}
+
+  .lanes{display:grid;grid-template-columns:92px repeat(7,minmax(150px,1fr));gap:6px;}
+  .lanehead{font-size:11.5px;font-weight:800;letter-spacing:1px;color:var(--muted);display:flex;align-items:center;justify-content:flex-end;text-align:right;padding-right:4px;}
+  .lcell{background:#fbfbfe;border:1px solid var(--line);border-radius:10px;padding:8px 9px;font-size:12px;min-height:100%;}
+  .lcell h4{font-size:13px;font-weight:800;line-height:1.3;margin-bottom:2px;}
+  .lcell .stagebadges{margin:2px 0 6px;display:flex;gap:4px;flex-wrap:wrap;}
+  .ln .tagline{color:var(--muted);font-size:11px;margin:6px 0 2px;font-weight:700;letter-spacing:.4px;}
+  .ln ul{list-style:none;}
+  .ln li{font-size:11.6px;line-height:1.42;color:#38445a;padding-left:11px;position:relative;margin:2px 0;}
+  .ln li::before{content:"";position:absolute;left:0;top:6px;width:5px;height:5px;border-radius:2px;}
+  .ln.usr li::before{background:var(--user);}
+  .ln.ai li::before{background:var(--ai);}
+  .lcell.prod h5{font-size:11.5px;font-weight:800;margin-bottom:3px;}
+  .lcell.prod p{font-size:11px;line-height:1.45;color:#38445a;}
+  .caprow{display:flex;flex-wrap:wrap;gap:3px;}
+  .caprow .chip{font-size:10px;padding:1px 6px;}
+  /* 核心阶段 E 高亮 */
+  .lcell.core{background:#fff9ef;border-color:#eec37f;box-shadow:inset 0 0 0 1px #f7d9a8;}
+  .lcell.core h4{color:var(--hilt);}
+  .stagename{color:#38445a;}
+  .arrowr{color:#c6cede;font-weight:700;}
+
+  /* 纵向角色列宽分隔 */
+  .lanerow{border-bottom:1px dashed #edf0f6;}
+
+  /* ---------- ② 分阶段详细卡 ---------- */
+  .stagecard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;margin:10px 0;}
+  .stagecard.core{background:#fffbf4;border-color:#eec37f;}
+  .sc-top{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+  .sc-rail{min-width:232px;flex:0 0 auto;}
+  .sc-num{display:flex;align-items:center;gap:10px;}
+  .letter{width:34px;height:34px;border-radius:9px;background:var(--brand);color:#fff;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .stagecard.core .letter{background:var(--hilt);}
+  .sc-num h3{font-size:17px;font-weight:800;line-height:1.25;}
+  .sc-num small{display:block;color:var(--muted);font-size:11.5px;font-weight:600;letter-spacing:.3px;}
+  .sc-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+  .sc-cap{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;align-items:center;}
+  .sc-cap .lbl{font-size:10.5px;color:var(--muted);font-weight:700;letter-spacing:.4px;}
+  .sc-body{flex:1 1 520px;min-width:380px;}
+  .sc-quad{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;}
+  .q{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fbfbfe;}
+  .q .qh{font-size:11px;font-weight:800;letter-spacing:.5px;display:flex;align-items:center;gap:5px;margin-bottom:4px;}
+  .q p,.q li{font-size:12.5px;color:#38445a;line-height:1.5;}
+  .q ul{padding-left:16px;}
+  .q.usr .qh{color:var(--user);}
+  .q.ai .qh{color:var(--ai);}
+  .q.dec .qh{color:var(--hilt);}
+  .q.state .qh{color:var(--ok);}
+  .q.usr{border-left:3px solid var(--user);}
+  .q.ai{border-left:3px solid var(--ai);}
+  .q.dec{border-left:3px solid var(--hilt);background:#fffdf7;}
+  .q.state{border-left:3px solid var(--ok);}
+
+  /* ---------- 决策节点总览矩阵 ---------- */
+  table.mx{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid var(--line);}
+  .mx th,.mx td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top;}
+  .mx thead th{background:#f2f4fa;font-size:11.5px;letter-spacing:.3px;color:#3a4660;}
+  .mx td.ncol,.mx th.ncol{background:#f8f9fd;width:96px;font-weight:700;}
+  .mx b.t{color:var(--ink);}
+  .mx .cls{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;margin-right:4px;}
+
+  /* ---------- 状态流转 / 完成判据 ---------- */
+  .badge-hook{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:6px;margin:2px 2px 2px 0;}
+  .bh-0{background:#eef0f6;color:#4a566b;}   /* 草稿态 */
+  .bh-1{background:var(--brand-soft);color:var(--brand);} /* 进行中 */
+  .bh-2{background:var(--warn-soft);color:var(--warn);}   /* 有待确认 */
+  .bh-3{background:var(--ok-soft);color:var(--ok);}       /* 可交付 */
+  .bh-4{background:var(--risk-soft);color:var(--risk);}   /* 无源 */
+  .flowarrow{color:#8a94a6;}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:900px){.twocol{grid-template-columns:1fr;}}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
+  .panel h4{font-size:15px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+  .kbox{border:1px solid var(--line);border-left:3px solid var(--brand);border-radius:8px;padding:9px 12px;margin:8px 0;background:#fbfbfe;}
+  .kbox b{font-size:12.5px;}
+  .kbox p{font-size:12.5px;color:#38445a;margin-top:2px;}
+
+  /* 台账示例 */
+  .ledger{width:100%;border-collapse:collapse;font-size:12px;background:#fff;}
+  .ledger th,.ledger td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top;}
+  .ledger thead th{background:#f2f4fa;font-size:11px;letter-spacing:.3px;}
+  .st{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;white-space:nowrap;}
+  .st-t{background:var(--ok-soft);color:var(--ok);}      /* 可信 */
+  .st-p{background:var(--warn-soft);color:var(--warn);}  /* 待确认 */
+  .st-x{background:var(--risk-soft);color:var(--risk);}  /* 无源 */
+
+  footer{padding:26px 0 44px;color:var(--muted);font-size:12px;text-align:center;}
+  .line-ok{color:var(--ok);font-weight:700;}
+  .hl{background:linear-gradient(transparent 62%,#ffe8a3 62%);}
+</style>
+</head>
+<body>
+
+  <header class="headbar">
+    <div class="inner">
+      <div class="hb-top">
+        <div class="brand">Deck<b>Sure</b> · 核心创作流程设计</div>
+        <span class="tag">题目第 2 题交付物 · 内部评审版（面向评审，产品/系统口吻）</span>
+      </div>
+      <h1>一条「想法 → 敢放心用于正式场合的成稿」的核心创作流程</h1>
+      <p class="sub">产品定义沿用定位页：AI 负责生成速度，产品负责可信交付。核心取舍＝<b>「生成 + 确认」</b>：不做全自动，关键事实与数据由用户拍板。全程以统一用户 Sasha（欧洲 B2B 售前顾问，向跨国零售客户做 30 分钟商业价值演示，明早交付）为推演对象。</p>
+      <div class="pillbar">
+        <span class="pill">覆盖角色：<span class="v">用户 Sasha · AI 助手</span></span>
+        <span class="pill">HITL 确认节点：<span class="v">B / D / E / G（核心）</span></span>
+        <span class="pill">事实与数据校验引擎：<span class="v">需自建 · 最大待验证项</span></span>
+        <span class="pill">首版范围：<span class="v">仅「对外正式汇报」</span></span>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ============ ① 一图看懂：全景流程 ============ -->
+    <section>
+      <div class="kicker">01 · 一图看懂</div>
+      <h2>从「零散想法」到「可放心交付」的全景流程</h2>
+      <p class="lead">横向 = 统一创作阶段（A–G）；纵向 = 泳道（Sasha / AI / 底层能力 / 数据产物）。箭头下方为贯穿全程的「主张台账」——每条事实与数字都有自己的状态，跨阶段流动，直到成稿前逐条清零。</p>
+
+      <div class="panorama">
+        <div class="legend">
+          <span class="lg"><span class="chip c-usr">👤 Sasha 用户侧</span></span>
+          <span class="lg"><span class="chip c-auto">🤖 AI 助手侧</span></span>
+          <span class="lg"><span class="chip c-hilt">HITL 需用户拍板</span></span>
+          <span class="lg"><span class="chip c-auto">AI 自主执行</span></span>
+          <span class="lg"><span class="chip c-cap">底层能力（已具备）</span></span>
+          <span class="lg"><span class="chip c-build">校验引擎（需自建）</span></span>
+        </div>
+
+        <div class="scrollx">
+        <div class="stagegrid">
+          <div class="flowaxis">
+            <span class="t">想法</span>
+            <div class="bar"></div>
+            <span class="end">✓ 可放心用于正式场合（离场导出即负责）</span>
+          </div>
+
+          <div class="lanes">
+            <!-- ============ 泳道行首（列标签） ============ -->
+            <div class="lanehead">阶段</div>
+            <div class="lcell"><h4><span class="stagename">A 输入与<br>场合识别</span></h4><div class="stagebadges"><span class="chip c-hilt">场合需确认</span></div><div class="caprow"><span class="chip c-cap">多模态</span><span class="chip c-cap">多语言</span></div></div>
+            <div class="lcell"><h4><span class="stagename">B 框架搭建</span></h4><div class="stagebadges"><span class="chip c-hilt">HITL · 选框架</span></div><div class="caprow"><span class="chip c-cap">模板库</span></div></div>
+            <div class="lcell"><h4><span class="stagename">C 内容生成</span></h4><div class="stagebadges"><span class="chip c-auto">AI 批量初稿</span></div><div class="caprow"><span class="chip c-cap">多模态模型</span></div></div>
+            <div class="lcell"><h4><span class="stagename">D 数据接入<br>与图表生成</span></h4><div class="stagebadges"><span class="chip c-hilt">HITL · 定数据</span></div><div class="caprow"><span class="chip c-cap">图表组件</span><span class="chip c-build">冲突检测*</span></div></div>
+            <div class="lcell core"><h4><span class="stagename">E 事实与<br>数据核对</span></h4><div class="stagebadges"><span class="chip c-hilt">核心 HITL</span></div><div class="caprow"><span class="chip c-build">校验引擎*</span><span class="chip c-cap">多模态</span></div></div>
+            <div class="lcell"><h4><span class="stagename">F 视觉与<br>多语言完善</span></h4><div class="stagebadges"><span class="chip c-auto">AI 自主</span></div><div class="caprow"><span class="chip c-cap">模板库</span><span class="chip c-cap">多模态</span><span class="chip c-cap">多语言</span></div></div>
+            <div class="lcell"><h4><span class="stagename">G 成稿与交付</span></h4><div class="stagebadges"><span class="chip c-hilt">用户背书</span></div><div class="caprow"><span class="chip c-cap">模板库</span><span class="chip c-build">必检*</span></div></div>
+
+            <!-- ============ Sasha 泳道 ============ -->
+            <div class="lanehead">👤<br>Sasha</div>
+            <div class="lcell"><div class="ln usr"><ul><li>一句话目标＋听众</li><li>丢入：实测数据、行业基准、纪要</li><li>补时长/口径</li></ul></div></div>
+            <div class="lcell"><div class="ln usr"><ul><li>2–3 套里选一版</li><li>或改成自己的</li><li>可存为个人模板</li></ul></div></div>
+            <div class="lcell"><div class="ln usr"><ul><li>逐页读要点草稿</li><li>删改补、下局部指令</li></ul></div></div>
+            <div class="lcell"><div class="ln usr"><ul><li>填/传数据，或指数据源</li><li>定图表类型与口径</li></ul></div></div>
+            <div class="lcell core"><div class="ln usr"><ul><li>逐条拍板：采纳/补口径/补源/改写/删</li><li>风险页显式可见，逐项清</li></ul></div></div>
+            <div class="lcell"><div class="ln usr"><ul><li>通读改措辞</li><li>选配图/封面</li><li>定输出语言</li></ul></div></div>
+            <div class="lcell"><div class="ln usr"><ul><li>最终通读 → 一键导出</li><li>导出 = 对每个数字负责</li></ul></div></div>
+
+            <!-- ============ AI 泳道 ============ -->
+            <div class="lanehead">🤖<br>AI</div>
+            <div class="lcell"><div class="ln ai"><ul><li>识场合＝客户提案/路演</li><li>画像：决策层/财务/IT</li><li>判素材可入稿度，回显待确认</li></ul></div></div>
+            <div class="lcell"><div class="ln ai"><ul><li>模板库按「客户提案·30min·价值＋ROI」给 2–3 骨架</li><li>标注适配差异</li></ul></div></div>
+            <div class="lcell"><div class="ln ai"><ul><li>多模态按定稿框架逐页出草稿</li><li>主张自动入台账</li><li>图表只占位，不编数字</li></ul></div></div>
+            <div class="lcell"><div class="ln ai"><ul><li>图表组件渲染真实数据图</li><li>自动标「口径＋来源」</li><li>与台账比对，冲突转 E</li></ul></div></div>
+            <div class="lcell core"><div class="ln ai"><ul><li>校验引擎分：可信/待确认/无源（建议）</li><li>风险标红置顶不折叠</li><li>记录裁决回流台账</li></ul></div></div>
+            <div class="lcell"><div class="ln ai"><ul><li>模板统一版式</li><li>补装饰配图（不承载数字）</li><li>术语表统一翻译、语内校对</li></ul></div></div>
+            <div class="lcell"><div class="ln ai"><ul><li>跑必检清单</li><li>不过则弹回对应阶段</li><li>锁定只读，附来源附录</li></ul></div></div>
+
+            <!-- ============ 底层能力泳道 ============ -->
+            <div class="lanehead">能力</div>
+            <div class="lcell prod"><p>多模态理解素材·多语言识别</p></div>
+            <div class="lcell prod"><p>模板库结构检索</p></div>
+            <div class="lcell prod"><p>多模态文本生成</p></div>
+            <div class="lcell prod"><p>图表组件·数据校验（*）</p></div>
+            <div class="lcell core prod"><p><b>校验引擎（*）＝本方案最大待验证项</b></p></div>
+            <div class="lcell prod"><p>模板库·图像生成·多语言适配</p></div>
+            <div class="lcell prod"><p>必检规则（*）·导出</p></div>
+
+            <!-- ============ 数据产物 / 数据流转泳道 ============ -->
+            <div class="lanehead">数据<br>流转</div>
+            <div class="lcell prod"><h5>创作上下文</h5><p>场合＋听众＋核心主张＋语言（Sasha 确认）</p></div>
+            <div class="lcell prod"><h5>框架定稿</h5><p>页面叙事的「回退锚点」快照</p></div>
+            <div class="lcell prod"><h5>逐页草稿</h5><p>主张台账初建（数字主张入账，初始「待处理」）</p></div>
+            <div class="lcell prod"><h5>图表＋元数据</h5><p>每图带口径＋来源；占位被真实图替换</p></div>
+            <div class="lcell core prod"><h5>台账清零</h5><p>无源/待确认 → 全部「已确认」</p></div>
+            <div class="lcell prod"><h5>语言/版式定稿</h5><p>事实栏保持全绿不受影响</p></div>
+            <div class="lcell prod"><h5>锁定交付包</h5><p>成稿＋口径来源附录页（现场可引用）</p></div>
+          </div>
+        </div>
+        </div>
+
+        <div class="legend" style="margin-top:10px;justify-content:flex-start;">
+          <span class="note">「*」号 = 依赖 <b>事实与数据校验引擎</b>，该引擎目前<b>未具备、需自建</b>，为本方案最大待验证项（详见 06 节）。D/E/G 三阶段均受其影响，故首版保留人工闸口兜底。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 02 分阶段说明 ============ -->
+    <section>
+      <div class="kicker">02 · 分阶段说明</div>
+      <h2>七个阶段：谁做什么、谁拍板、状态怎么变</h2>
+      <p class="lead">为便于评审速读，每阶段固定四象限：<b>Sasha 做什么 / AI 做什么 / 判断节点 / 状态流转</b>，并标注依赖的底层能力与自主度。</p>
+
+      <!-- A -->
+      <div class="stagecard">
+        <div class="sc-top">
+          <div class="sc-rail">
+            <div class="sc-num"><div class="letter">A</div><div><h3>输入与场合识别</h3><small>INPUT &amp; CONTEXT RECOGNITION</small></div></div>
+            <div class="sc-badges"><span class="chip c-hilt">轻确认：场合判断回显</span></div>
+            <div class="sc-cap"><span class="lbl">能力</span><span class="chip c-cap">多模态模型</span><span class="chip c-cap">多语言基础处理</span></div>
+          </div>
+          <div class="sc-body">
+            <div class="sc-quad">
+              <div class="q usr"><div class="qh">👤 Sasha 在做</div><p>一句话目标与听众；丢入实测数据表、需注明来源的行业基准、销售纪要点；补一句时长（30 分钟）。</p></div>
+              <div class="q ai"><div class="qh">🤖 AI 在做</div><ul><li>识别场合＝客户提案/路演，推测听众画像；</li><li>把素材分成「可入稿 / 缺出处 / 需追问」三类；</li><li>产出「创作上下文」并回显。</li></ul></div>
+              <div class="q dec"><div class="qh">◆ 判断节点</div><p><b>场合与听众的判断要 Sasha 确认</b>——场合错了，后面整套框架与数据口径都白搭，故回显确认而非直接开跑。</p></div>
+              <div class="q state"><div class="qh">▣ 状态流转</div><p>散想法 → <span class="st st-t">创作上下文 ✓</span>（未确认则停在 A）。</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B -->
+      <div class="stagecard">
+        <div class="sc-top">
+          <div class="sc-rail">
+            <div class="sc-num"><div class="letter">B</div><div><h3>框架搭建</h3><small>STRUCTURE · HITL</small></div></div>
+            <div class="sc-badges"><span class="chip c-hilt">HITL：用户选框架</span></div>
+            <div class="sc-cap"><span class="lbl">能力</span><span class="chip c-cap">演示文稿模板库</span></div>
+          </div>
+          <div class="sc-body">
+            <div class="sc-quad">
+              <div class="q usr"><div class="qh">👤 Sasha 在做</div><p>在 AI 给的 2–3 套结构里选一版，或直接改成自己的；用得顺手的可存为个人模板。</p></div>
+              <div class="q ai"><div class="qh">🤖 AI 在做</div><p>模板库按「客户提案·30 分钟·以价值＋ROI 为主线」检索，给 2–3 套骨架，并标注各自的适配情境与差异（哪套更贴销售阶段、哪套更偏技术深潜）。</p></div>
+              <div class="q dec"><div class="qh">◆ 判断节点</div><p><b>页面叙事顺序是 Sasha 的业务判断，AI 不自动替她定。</b>这是结构决策唯一闸口，也是全局「回退锚点」（见 05 节 c）。</p></div>
+              <div class="q state"><div class="qh">▣ 状态流转</div><p>上下文 ✓ → <span class="st st-t">框架定稿</span>（做快照，此后任何阶段可一键回退到此）。</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- C -->
+      <div class="stagecard">
+        <div class="sc-top">
+          <div class="sc-rail">
+            <div class="sc-num"><div class="letter">C</div><div><h3>内容生成</h3><small>CONTENT DRAFT · AI 自主初稿</small></div></div>
+            <div class="sc-badges"><span class="chip c-auto">AI 批量生成（草稿）</span><span class="chip c-hilt">用户可就地改</span></div>
+            <div class="sc-cap"><span class="lbl">能力</span><span class="chip c-cap">多模态模型</span></div>
+          </div>
+          <div class="sc-body">
+            <div class="sc-quad">
+              <div class="q usr"><div class="qh">👤 Sasha 在做</div><p>逐页读 AI 草稿，删改补充；对缺素材的页给局部指令（如"把实测里那 12 家客户的结论放这页"）。</p></div>
+              <div class="q ai"><div class="qh">🤖 AI 在做</div><ul><li>多模态模型依定稿框架＋素材，逐页生成要点草稿；</li><li><b>自动抽取每处数字/事实性主张写入「主张台账」</b>（含页码位置）；</li><li><b>图表一律只留占位、不生成数字</b>——避免 AI 编造数据图。</li></ul></div>
+              <div class="q dec"><div class="qh">◆ 判断节点</div><p><b>草稿自主生成不打断</b>；但页内措辞与保留/删除主张由 Sasha 就地决定。无硬闸口，属可逆环节。</p></div>
+              <div class="q state"><div class="qh">▣ 状态流转</div><p>框架 → <span class="st st-t">逐页草稿</span>；台账条目初始＝「待处理（未分类）」。</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D -->
+      <div class="stagecard">
+        <div class="sc-top">
+          <div class="sc-rail">
+            <div class="sc-num"><div class="letter">D</div><div><h3>数据接入与图表生成</h3><small>DATA &amp; CHART · HITL</small></div></div>
+            <div class="sc-badges"><span class="chip c-hilt">HITL：数据与口径由用户定</span></div>
+            <div class="sc-cap"><span class="lbl">能力</span><span class="chip c-cap">图表渲染组件</span><span class="chip c-build">数值一致性（*）</span></div>
+          </div>
+          <div class="sc-body">
+            <div class="sc-quad">
+              <div class="q usr"><div class="qh">👤 Sasha 在做</div><p>两条路任选：直接填/传数据（Excel、粘贴、截图表格），或指定数据来源（公司 BI 链接、某行业报告 URL）；确认图表类型与口径（指标定义/时间范围/单位）。</p></div>
+              <div class="q ai"><div class="qh">🤖 AI 在做</div><ul><li>图表组件<b>只渲染用户提供/指定的数据</b>，出真实图表替换 C 期占位；</li><li>每张图自动标注「口径＋来源」，供 Sasha 现场被追问时引用；</li><li>图内数字 vs 台账文字的比对若冲突 → 标记待 E。</li></ul></div>
+              <div class="q dec"><div class="qh">◆ 判断节点</div><p><b>数据权威在用户</b>：AI 建议图表类型可自主、可被覆盖；但数据来自谁、口径怎么定义，必须 Sasha 定。</p></div>
+              <div class="q state"><div class="qh">▣ 状态流转</div><p>占位图 → <span class="st st-t">真实图表（带口径/来源）</span>；数字冲突自动挂到 E。</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- E -->
+      <div class="stagecard core">
+        <div class="sc-top">
+          <div class="sc-rail">
+            <div class="sc-num"><div class="letter">E</div><div><h3>事实与数据核对</h3><small>FACT CHECK · 核心 HITL · 硬闸口</small></div></div>
+            <div class="sc-badges"><span class="chip c-hilt">核心 HITL：逐条拍板</span><span class="chip c-risk">待确认未清零 → 不允许进入 G</span></div>
+            <div class="sc-cap"><span class="lbl">能力</span><span class="chip c-build">事实与数据校验引擎（*需自建）</span><span class="chip c-cap">多模态（辅助找源）</span></div>
+          </div>
+          <div class="sc-body">
+            <div class="sc-quad">
+              <div class="q usr"><div class="qh">👤 Sasha 在做</div><p>对台账逐条裁决：<b>可信</b>→一键采纳；<b>待确认</b>→补口径/换数字/确认来源是否可对外引用；<b>无源</b>→三选一（补出处 / 改写为无数字的定性表述 / 删除）。<b>无源条目不允许直接过关。</b></p></div>
+              <div class="q ai"><div class="qh">🤖 AI 在做</div><ul><li>校验引擎把每处事实/数字建议分为三类：可信/待确认/无源；</li><li><b>风险点显式暴露在页面上</b>——待确认与无源项标红、置顶、侧栏常驻，不折叠不弱化；</li><li>记录裁决结果回流台账，作为后续反馈与自学习样本。</li></ul></div>
+              <div class="q dec"><div class="qh">◆ 判断节点</div><p><b>AI 只做分类建议，最终归类与裁决权交还用户。</b>信誉由 Sasha 承担，故最后拍板不可能是 AI。这是「生成＋确认」内核的落点。</p></div>
+              <div class="q state"><div class="qh">▣ 状态流转</div><p>条目逐条 <span class="st st-x">无源</span>/<span class="st st-p">待确认</span> → <span class="st st-t">已确认</span>；全绿（0 待确认）前 <b>G 不可用</b>。页面常驻计数："剩 N 条待你拍板"。</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- F -->
+      <div class="stagecard">
+        <div class="sc-top">
+          <div class="sc-rail">
+            <div class="sc-num"><div class="letter">F</div><div><h3>视觉与多语言完善</h3><small>POLISH &amp; LOCALIZATION</small></div></div>
+            <div class="sc-badges"><span class="chip c-auto">AI 自主</span><span class="chip c-hilt">轻确认：输出语言</span></div>
+            <div class="sc-cap"><span class="lbl">能力</span><span class="chip c-cap">模板库</span><span class="chip c-cap">多模态模型</span><span class="chip c-cap">多语言基础处理</span></div>
+          </div>
+          <div class="sc-body">
+            <div class="sc-quad">
+              <div class="q usr"><div class="qh">👤 Sasha 在做</div><p>通读一遍、改措辞语调；挑封面/配图；设定输出语言（客户或投委会用英语/日/韩，或需要双语版）。</p></div>
+              <div class="q ai"><div class="qh">🤖 AI 在做</div><ul><li>模板库做版式统一：间距/字体/页眉页脚/图表配色一致；</li><li>图像模型补<b>装饰性配图</b>——明确配图不承载数字，数字只可能来自 D 的数据侧，杜绝配图带假数据；</li><li>措辞优化；中/英/日/韩输出适配，专业术语表保证全文翻译一致；语内错别字校对。</li></ul></div>
+              <div class="q dec"><div class="qh">◆ 判断节点</div><p>低风险微调全程 AI 自主；<b>输出语言由 Sasha 定</b>。图表内数字不随语言翻译，保留原文避免口径漂移。<b>守卫：任何 F 措辞改动若触及事实性句子，自动把对应台账条目回拨为「待确认」，重新走 E</b>——版式可自由动，事实口径不回退。</p></div>
+              <div class="q state"><div class="qh">▣ 状态流转</div><p>事实栏全绿 → <span class="st st-t">版式/语言定稿</span>（视觉改动不触碰已确认的数字）。</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- G -->
+      <div class="stagecard">
+        <div class="sc-top">
+          <div class="sc-rail">
+            <div class="sc-num"><div class="letter">G</div><div><h3>成稿与交付</h3><small>DELIVERY · 完成判据落点</small></div></div>
+            <div class="sc-badges"><span class="chip c-hilt">最终拍板：导出即背书</span></div>
+            <div class="sc-cap"><span class="lbl">能力</span><span class="chip c-cap">模板库（导出样式）</span><span class="chip c-build">必检规则（*）</span></div>
+          </div>
+          <div class="sc-body">
+            <div class="sc-quad">
+              <div class="q usr"><div class="qh">👤 Sasha 在做</div><p>「离场前 10 分钟」最后一次通读 → 一键导出 PDF/PPT/投屏稿。导出即 Sasha 向这份稿件作最终背书："我对每个数字负责"。</p></div>
+              <div class="q ai"><div class="qh">🤖 AI 在做</div><ul><li>跑<b>必检清单</b>（见 05(d)）：任一不过 → 弹回对应阶段、不放行成稿；</li><li>全过 → 锁定只读版本，导出包附「口径＋来源附录页」，把每张图的数据出处整理成一页，作为现场被追问时的底气。</li></ul></div>
+              <div class="q dec"><div class="qh">◆ 判断节点</div><p><b>完成判据＝待确认清零＋无源处理完＋必检通过＋用户通读导出</b>四者全过（详见 05(d)）。只有 G 通过，才进入「可放心用于正式场合」状态。</p></div>
+              <div class="q state"><div class="qh">▣ 状态流转</div><p><span class="st st-t">已锁定·可交付</span> → 导出后只读；后续改动须另起草稿，保护已交付版本。</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 03 决策节点总览 ============ -->
+    <section>
+      <div class="kicker">03 · 谁在哪个环节拍板</div>
+      <h2>决策节点总览：AI 自主 vs 必须澄清 / 确认 / 交还用户</h2>
+      <p class="lead">把「自主度」显式拉平对比——评审可直接核对哪些环节不可绕过用户。</p>
+      <div class="scrollx">
+      <table class="mx" style="min-width:980px;">
+        <thead><tr><th class="ncol">阶段</th><th>A 输入识别</th><th>B 框架</th><th>C 内容</th><th>D 数据图表</th><th>E 事实核对</th><th>F 视觉语言</th><th>G 交付</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="ncol">自主度类型</td>
+            <td><span class="cls" style="background:var(--user-soft);color:var(--user)">澄清</span>素材缺项追问</td>
+            <td><span class="cls" style="background:var(--hilt-soft);color:var(--hilt)">确认</span>结构性选择</td>
+            <td><span class="cls" style="background:var(--ai-soft);color:var(--ai)">AI 自主</span>批量草稿</td>
+            <td><span class="cls" style="background:var(--hilt-soft);color:var(--hilt)">确认</span>数据权威在用户</td>
+            <td><span class="cls" style="background:var(--risk-soft);color:var(--risk)">交还用户</span>逐条裁决</td>
+            <td><span class="cls" style="background:var(--ai-soft);color:var(--ai)">AI 自主</span>＋语言轻确认</td>
+            <td><span class="cls" style="background:var(--risk-soft);color:var(--risk)">交还用户</span>导出背书</td>
+          </tr>
+          <tr>
+            <td class="ncol">具体节点</td>
+            <td>场合/听众判断错误即全盘错 → 回显待确认；信息不足先问不硬猜</td>
+            <td>叙事顺序=业务判断，AI 只给 2–3 套建议，不自动定</td>
+            <td>草稿不打断；页内取舍由用户就地改</td>
+            <td>数据来自谁、口径怎么定必须用户拍</td>
+            <td>AI 分类仅建议；无源/待确认是否过关＝用户裁决</td>
+            <td>版式配色自主；输出语言用户定</td>
+            <td>导出那一刻＝用户对全稿数字负责</td>
+          </tr>
+          <tr>
+            <td class="ncol">AI 是否可自主执行</td>
+            <td>识别可自动，确认不可跳过</td>
+            <td>建议可自动，选定必须用户</td>
+            <td>完全自主（结果可逆）</td>
+            <td>渲染可自动，数据来源不可替用户</td>
+            <td><b>不可</b>——硬闸口</td>
+            <td>自主（低风险）</td>
+            <td><b>不可</b>——导出由用户点</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="note" style="margin-top:8px;">自主度设计原则：<b>能安全补默认的不打断（版式/措辞），有信誉风险的一律问、确认或交还，绝不替用户编造事实与数据。</b></p>
+    </section>
+
+    <!-- ============ 04 两级状态流转 ============ -->
+    <section>
+      <div class="kicker">04 · 状态流转模型</div>
+      <h2>两级状态：条目级 + 成稿级</h2>
+      <p class="lead">数据流转不只"页面推进"，真正的系统底座是一本随全流程滚动的<b>「主张台账」</b>——每条事实/数字都带状态跨阶段流动。</p>
+      <div class="twocol">
+        <div class="panel">
+          <h4>① 台账条目级（贯穿 B→G）</h4>
+          <div class="kbox">
+            <b>字段：</b>
+            <p style="font-size:12px;color:#38445a;">内容 / 出处(来源) / 口径(指标定义·时间范围·单位) / 页码位置 / <b>状态</b> / 决策人=Sasha</p>
+          </div>
+          <p style="font-size:12.5px;color:#38445a;line-height:1.8;">
+            <span class="st st-t">可信</span> ← 来自用户素材/已确认来源且口径一致（用户一键采纳）
+            &nbsp;·&nbsp;
+            <span class="st st-p">待确认</span> → 有来源但引用合理性/口径需拍板
+            &nbsp;·&nbsp;
+            <span class="st st-x">无源</span> → 查无出处，AI 生成/推断，<b>禁止用于正式场合</b>
+          </p>
+          <p style="font-size:12.5px;color:#38445a;margin-top:6px;">台账是唯一"事实真源"：页面任何数字均指向台账条目；E 清零即全稿可信；F 的视觉改动不触碰已确认数字，靠台账隔离。</p>
+        </div>
+        <div class="panel">
+          <h4>② 成稿级状态机 + 门禁</h4>
+          <p style="font-size:12.5px;line-height:2.05;">
+            <span class="bh-0">想法</span><span class="flowarrow"> → </span>
+            <span class="bh-1">A 上下文✓</span><span class="flowarrow"> → </span>
+            <span class="bh-1">B 框架定稿</span><span class="flowarrow"> → </span>
+            <span class="bh-1">C 草稿就绪</span><span class="flowarrow"> → </span>
+            <span class="bh-1">D 图表齐备</span><span class="flowarrow"> → </span>
+            <span class="bh-2">E 事实栏清空</span><span class="flowarrow"> → </span>
+            <span class="bh-1">F 语言/版式定稿</span><span class="flowarrow"> → </span>
+            <span class="bh-3">G 已锁定·可交付</span>
+          </p>
+          <div class="kbox">
+            <b>门禁（防"带着风险交付"）：</b>
+            <ul style="padding-left:16px;font-size:12.5px;color:#38445a;">
+              <li>E 存在<span class="st st-x">无源</span>或 <span class="st st-p">待确认</span> → <b>G 灰置不可用</b>，页面常驻"N 条待你拍板"。</li>
+              <li>存在占位图 / 数字冲突 / 必填页缺失 → 提示并弹回对应阶段。</li>
+              <li>唯一放行条件：<span class="bh-3">可放心用于正式场合</span>徽标亮起（详见 05-d 判据）。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="subhead">台账工作示例（Sasha 场景推演）</div>
+      <div class="scrollx">
+      <table class="ledger" style="min-width:960px;">
+        <thead><tr><th>内容（页面主张）</th><th>来源</th><th>口径</th><th>状态 → 用户动作</th></tr></thead>
+        <tbody>
+          <tr><td>"部署后 6 个月内实现 ROI 212%"</td><td>Sasha 上传的公司实测数据</td><td>12 家试点客户，含实施成本的净收益口径</td><td><span class="st st-t">可信</span> → 采纳（口径她亲自核过）</td></tr>
+          <tr><td>"同类项目行业平均上线周期 11 周"</td><td>行业报告片段（需注明出处）</td><td>待确认是否可按此口径引用</td><td><span class="st st-p">待确认</span> → 补引用许可 / 换说法</td></tr>
+          <tr><td>"可帮助零售客户降低约 40% 运营成本"</td><td>AI 由素材推断（查无原文）</td><td>—</td><td><span class="st st-x">无源</span> → 删 / 改定性表述 / 补出处，不得直接过关</td></tr>
+          <tr><td>"数字货架渗透率 2025 年达 34%"</td><td>销售纪要里"听说"的数字</td><td>口径不清</td><td><span class="st st-x">无源</span> → 同上；纪要口头数据不可引用于客户场合</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="note" style="margin-top:6px;">示例第二、四行演示了一个要点：<b>"有来源"≠"可对外引用"</b>——内部口头来源与未授权外部基准，在核对阶段都会被拦下。</p>
+    </section>
+
+    <!-- ============ 05 不确定性处理 ============ -->
+    <section>
+      <div class="kicker">05 · 不确定性处理（评审重点）</div>
+      <h2>四种"不顺"的既定处理策略，而非临场决定</h2>
+      <p class="lead">每一类不确定性都有预设分支，避免把"怎么办"留到用户情绪最差、时间最紧的时刻。</p>
+
+      <div class="twocol">
+        <div class="panel">
+          <h4>(a) 信息不足：追问，还是占位继续？</h4>
+          <p style="font-size:12.5px;color:#38445a;">按<b>是否涉及信誉</b>分两层，避免无脑追问打断生成节奏：</p>
+          <div class="kbox"><b>① 能安全补默认的 → 不打断。</b><p>版式、措辞、图表配色等低风险项，默认走商务模板/惯例，先跑起来。</p></div>
+          <div class="kbox"><b>② 涉事实/数据/场合的 → 追问或占位，绝不硬编。</b><p>给<b>结构化选项</b>而非开放题（如"听众更可能是——决策层 / 财务 / 采购/IT？"），压低 Sasha 的决策成本。若她选择"先继续做"：缺失事实项走「占位＋标记无源」，带显式提醒，并自动进入 E 待裁决——占位可以存在草稿里，但<b>永远进不了成稿</b>。</p></div>
+        </div>
+        <div class="panel">
+          <h4>(b) 某步执行失败：校验不过就不硬编</h4>
+          <p style="font-size:12.5px;color:#38445a;">统一走「重试 → 显式降级 → 归入台账」三层：</p>
+          <div class="kbox"><b>① 重试。</b><p>模型抖动 / 图表渲染失败：自动重试一次，属瞬态。</p></div>
+          <div class="kbox"><b>② 降级为可编辑占位，并明确告知。</b><p>保留结构位置与"缺什么、为什么"，占位内写明需 Sasha 完成的内容，界面显式标注"此块由 AI 兜底为占位"。<b>降级永不偷偷发生</b>——任何降级都可见、可追踪。</p></div>
+          <div class="kbox"><b>③ 占位若涉事实/数据 → 自动升级为台账"无源/待确认"条目。</b><p>保证任何降级都<b>不绕过 E 的事实闸口</b>：宁可慢，不冒险。</p></div>
+        </div>
+      </div>
+
+      <div class="twocol" style="margin-top:4px;">
+        <div class="panel">
+          <h4>(c) 用户中途改变主意：任意阶段可回退，不丢已确认内容</h4>
+          <p style="font-size:12.5px;color:#38445a;">设三个回退锚点，配合"已确认内容是可平移资产"原则：</p>
+          <div class="kbox"><b>改框架 / 换叙事 → 回 B（框架定稿＝快照点）。</b><p>保留已确认的台账条目与数字，尽量在新框架里复用；仅未确认内容重排。</p></div>
+          <div class="kbox"><b>改内容方向 / 补素材 → 回 C 或就地编辑（就地优先）。</b><p>已确认的主张不被打回，只重生成受影响页面。</p></div>
+          <div class="kbox"><b>改数据 / 换数据源 → 回 D。</b><p>重跑图表 + 自动冲突检测，波及的台账条目重新标记待 E。</p></div>
+          <div class="kbox"><b>通用底线：</b><p>任何回退可撤销；草稿全程版本化。Sasha 无论卡在哪一步都能回退重来，<b>不从头开始，也不丢已拍板的东西</b>——回退成本是她敢点"生成"的前提。</p></div>
+        </div>
+        <div class="panel">
+          <h4>(d) 完成判据："可放心用于正式场合" = 4 条全过</h4>
+          <div class="kbox"><b>① 待确认清零。</b><p>台账无任何遗留的待确认条目（含无源）。</p></div>
+          <div class="kbox"><b>② 无源项处理完毕。</b><p>每处无源均走完三选一：补出处 / 改定性表述 / 删除；或用户显式降级为"内部备注、不对外展示"。</p></div>
+          <div class="kbox"><b>③ 必检通过。</b><p>无占位图表残留、图表数字与台账文字一致、必填页完整、输出语言与格式正确。</p></div>
+          <div class="kbox"><b>④ 可离场导出。</b><p>Sasha 完成最终通读并导出 → 版本锁定只读。导出即"离场即负责"的仪式化瞬间。</p></div>
+          <p style="font-size:12.5px;color:#38445a;">①②③ 由系统门禁保证、④ 由 Sasha 主动完成；<b>四者全过才亮起「<span class="line-ok">可放心用于正式场合</span>」</b>——这既是对用户的承诺，也把"完成"定义成可检验、可演示的条件。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 06 技术落地现状 ============ -->
+    <section>
+      <div class="kicker">06 · 技术落地现状（如实标注）</div>
+      <h2>哪些能力已具备，哪些需自建——不要把校验引擎当成已经存在</h2>
+      <div class="scrollx">
+      <table class="mx" style="min-width:900px;">
+        <thead><tr><th class="ncol" style="width:200px;">底层能力</th><th>现状</th><th>主要落点阶段</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td class="ncol"><b>多模态大模型</b>（文本＋图像生成）</td><td><span class="st st-t">已接入</span></td><td>A / C / F</td><td>文本与要点生成、理解表格/截图素材、装饰性配图。</td></tr>
+          <tr><td class="ncol"><b>演示文稿模板库</b></td><td><span class="st st-t">已接入</span></td><td>B / F / G</td><td>结构建议、版式统一、导出样式。</td></tr>
+          <tr><td class="ncol"><b>图表渲染组件</b></td><td><span class="st st-t">已接入</span></td><td>D</td><td>只渲染用户提供/指定的数据，不被用于无中生有。</td></tr>
+          <tr><td class="ncol"><b>多语言基础处理</b></td><td><span class="st st-t">已接入</span></td><td>A / F</td><td>中英日韩输出语言适配与基础翻译。</td></tr>
+          <tr style="background:#fffbf4;">
+            <td class="ncol"><b>事实与数据校验引擎</b><br><span style="font-size:11px;color:var(--hilt);font-weight:700;">需自建 · 最大待验证项</span></td>
+            <td><span class="chip c-build">未具备 · 需自建</span></td>
+            <td>D / E / G</td>
+            <td>D 数值冲突检测、E 三类分类与溯源、G 必检判定都依赖它。<b>风险点：主张自动抽取的召回、来源溯源的可靠性、误报/漏报率</b>——任一环节失守都会直接击穿"放心用"的信任承诺，故为本方案最大不确定项。</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="kbox" style="border-left-color:var(--hilt);margin-top:12px;">
+        <b>对"还没造好的引擎"我们的立场：</b>
+        <p style="margin-top:4px;">正因为校验引擎尚不可靠，首版才保留 E/G 的<b>人工闸口作为设计上的兜底层</b>——E 阶段"AI 建议分类、用户逐条裁决"即使引擎表现欠佳，交付质量仍由用户兜住。同时，<b>每次人工拍板都在沉淀样本</b>：用户对"无源/待确认"的裁决可作为引擎标注数据与评测集，冷启动期的人肉闸口恰恰是校验引擎自建期的数据来源（见 07）。人工闸口不是引擎没做好的妥协，而是<b>先保证交付可信、再逐步提升自动化的台阶</b>。</p>
+      </div>
+    </section>
+
+    <!-- ============ 07 主动取舍 ============ -->
+    <section>
+      <div class="kicker">07 · 首版主动取舍与依据</div>
+      <h2>明确不做的事，和为什么</h2>
+      <div class="twocol">
+        <div class="panel" style="border-color:#eec37f;">
+          <h4>首版只做：单一场景 + 保留确认节点</h4>
+          <ul style="padding-left:18px;font-size:13px;color:#38445a;line-height:1.9;">
+            <li><b>只覆盖「对外正式汇报」</b>（客户提案 / 投资人路演），暂不做内部汇报、教学等泛场景；</li>
+            <li><b>不做全自动</b>：B 选框架、D 定数据口径、E 逐条拍板、G 导出背书四个 HITL 节点全部保留。</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>一句话理由</h4>
+          <p style="font-size:13.5px;color:#38445a;line-height:1.9;">对外正式汇报是<b>信任成本最高、痛点最锋利、用户最愿为"确定性"付费</b>的单一场景——把"敢放心用"这一个承诺在最小范围做透，比铺开多个半吊子场景更能建立口碑；而保留人工确认节点既是当前交付质量的生命线，也顺带为待自建的校验引擎<b>收集人工标注数据</b>，让自动化随引擎成熟而水到渠成地放开。</p>
+        </div>
+      </div>
+      <div class="kbox" style="margin-top:10px;">
+        <b>取舍的闭环：</b>
+        <p style="margin-top:4px;">"对外正式汇报"对可信的要求最高 → 逼出「生成＋确认」的取舍 → 确认节点带来用户裁决样本 → 样本训练校验引擎 → 引擎可靠后再把自动化（更多阶段 AI 直通）与场景（内部汇报等）逐步放开。首版的"保守"是后续"放得开"的必要前提。</p>
+      </div>
+    </section>
+
+    <footer>DeckSure · 核心创作流程设计（题目第 2 题交付物）— 生成 + 确认：AI 负责速度，产品负责可信交付。</footer>
+  </div>
+</body>
+</html>
